@@ -14,6 +14,7 @@ On the VM:
   private/state/approvals/      One-use approval records
   private/state/downloads/      Approved downloads
   private/state/transcripts/    Cached generated transcripts
+  private/state/libcal/         Encrypted booking history and write lock
   private/state/models/         Downloaded transcription model
   private/secrets/session-key   Encryption key
   private/secrets/clients.json  Enabled clients and expiries, no bearer tokens

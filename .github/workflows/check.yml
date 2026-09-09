@@ -14,5 +14,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check
       - run: npm run test:upstream
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:rooms:browser
       - run: npm run format:check
       - run: npm run audit:package

@@ -17,6 +17,8 @@ import {
   validateWriteTarget,
   describeTool,
 } from "./authorization.mjs";
+import { LibCal, roomTools } from "./libcal.mjs";
+import { roomSchemas, parseRoomArgs, RoomError } from "./src/libcal.mjs";
 import { outlineTool, getCourseOutline } from "./outlines.mjs";
 import { readConfig, workerEnv, root } from "./src/config.mjs";
 import { problem, toolError, normalizeToolResult } from "./src/errors.mjs";
@@ -62,7 +64,11 @@ async function body(req) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-export function createGateway(config, createClient) {
+export function createGateway(
+  config,
+  createClient,
+  { libcal = new LibCal(config) } = {},
+) {
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
   let upstream;
@@ -106,7 +112,7 @@ export function createGateway(config, createClient) {
       if (req.url === "/status" && req.method === "GET")
         return reply(res, 200, {
           service: "waterloo-mcp",
-          version: "0.1.0",
+          version: "0.2.0",
           status: "running",
         });
       if (req.url?.startsWith("/approvals/")) {
@@ -143,7 +149,10 @@ export function createGateway(config, createClient) {
           return httpError(res, "APPROVAL_INVALID");
         }
       }
-      if (["/", "/setup"].includes(req.url) && req.method === "GET")
+      if (
+        ["/", "/setup", "/connection"].includes(req.url) &&
+        req.method === "GET"
+      )
         return reply(
           res,
           200,
@@ -204,29 +213,54 @@ export function createGateway(config, createClient) {
         );
       }
       const server = new Server(
-        { name: "waterloo-mcp", version: "0.1.0" },
+        { name: "waterloo-mcp", version: "0.2.0" },
         { capabilities: { tools: {} } },
       );
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: [...(await (await client()).listTools()).tools, outlineTool]
+        tools: [
+          ...(await (await client()).listTools()).tools,
+          outlineTool,
+          ...roomTools,
+        ]
           .filter((t) => KNOWN_TOOLS.has(t.name))
           .map(describeTool),
       }));
       server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
         const { name } = params;
-        const args = { ...params.arguments };
+        let args = { ...params.arguments };
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
+        if (roomSchemas[name]) {
+          try {
+            args = parseRoomArgs(name, args);
+          } catch {
+            return toolError("INPUT_INVALID");
+          }
+        }
         if (needsApproval(name, args)) {
           try {
-            validateWriteTarget(args);
+            if (name === "download_file" || name === "get_syllabus")
+              validateWriteTarget(args);
           } catch {
             return toolError("WRITE_PATH_REJECTED");
           }
           if (!authorizationId) {
-            const id = await approvals.request(name, args, caller);
+            let summary;
+            if (roomSchemas[name]) {
+              try {
+                summary = await libcal.preview(name, args);
+              } catch (error) {
+                return toolError(
+                  error instanceof RoomError
+                    ? error.code
+                    : "UPSTREAM_UNAVAILABLE",
+                );
+              }
+            }
+            const id = await approvals.request(name, args, caller, summary);
             return toolError("APPROVAL_REQUIRED", {
+              ...(summary ? { summary } : {}),
               authorizationId: id,
               approvalUrl: config.origin + "/approvals/" + id,
             });
@@ -240,13 +274,15 @@ export function createGateway(config, createClient) {
         try {
           const run = async () =>
             normalizeToolResult(
-              name === "get_course_outline"
-                ? await getCourseOutline(await client(), args)
-                : await (
-                    await client()
-                  ).callTool({ name, arguments: args }, undefined, {
-                    timeout: 180000,
-                  }),
+              roomSchemas[name]
+                ? await libcal.call(name, args)
+                : name === "get_course_outline"
+                  ? await getCourseOutline(await client(), args)
+                  : await (
+                      await client()
+                    ).callTool({ name, arguments: args }, undefined, {
+                      timeout: 180000,
+                    }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
@@ -286,7 +322,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     const config = readConfig();
     const app = createGateway(config, async () => {
-      const c = new Client({ name: "waterloo-gateway", version: "0.1.0" });
+      const c = new Client({ name: "waterloo-gateway", version: "0.2.0" });
       await c.connect(
         new StdioClientTransport({
           command: process.execPath,

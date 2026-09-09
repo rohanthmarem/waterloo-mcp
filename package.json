@@ -1,7 +1,7 @@
 {
   "name": "waterloo-mcp",
-  "version": "0.1.0",
-  "description": "Personal Waterloo LEARN, Odyssey and course outline access over MCP.",
+  "version": "0.2.0",
+  "description": "Personal Waterloo LEARN, Odyssey, course outlines, and study rooms over MCP.",
   "type": "module",
   "scripts": {
     "setup": "node scripts/setup.mjs",
@@ -18,7 +18,8 @@
     "enroll": "node scripts/enroll.mjs enroll",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "audit:package": "node scripts/audit-package.mjs"
+    "audit:package": "node scripts/audit-package.mjs",
+    "test:rooms:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/libcal-browser.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

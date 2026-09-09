@@ -1,6 +1,66 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  ROOM_NOT_FOUND: [
+    404,
+    "The study room was not found.",
+    "Refresh list_study_rooms and use its room ID.",
+    false,
+  ],
+  ROOM_UNAVAILABLE: [
+    409,
+    "The exact room and time are no longer available.",
+    "Search availability again. A different room or time needs a new approval.",
+    false,
+  ],
+  ROOM_POLICY_LIMIT: [
+    400,
+    "This request exceeds a room or booking limit.",
+    "Use a future time within one week, 15–180 minutes in 15-minute steps, and respect room capacity and the library booking quota.",
+    false,
+  ],
+  ROOM_AUTH_REQUIRED: [
+    401,
+    "LibCal needs a current Waterloo sign-in.",
+    "Run check_auth to renew Waterloo, then retry after a new approval. If it persists, refresh the saved browser login. A temporary checkout hold may take a few minutes to expire.",
+    false,
+  ],
+  ROOM_PAGE_CHANGED: [
+    502,
+    "The LibCal response or booking form was not recognized.",
+    "Stop and report this code. Do not guess form fields or submit repeatedly.",
+    false,
+  ],
+  ROOM_BOOKING_UNKNOWN: [
+    409,
+    "A booking or cancellation may have been submitted, but its outcome is unconfirmed.",
+    "Check get_study_room_bookings and your library confirmation email. Do not create a new request ID or repeat the action until the outcome is known.",
+    false,
+  ],
+  ROOM_REQUEST_CONFLICT: [
+    409,
+    "This booking request conflicts with a recorded attempt.",
+    "Reuse the original bookingRequestId only with identical arguments; inspect existing booking records before starting another attempt.",
+    false,
+  ],
+  ROOM_BOOKING_NOT_FOUND: [
+    404,
+    "This MCP has no record of that booking.",
+    "Use a bookingId from get_study_room_bookings. Manual bookings are not imported.",
+    false,
+  ],
+  ROOM_CANCEL_UNAVAILABLE: [
+    409,
+    "This booking cannot be cancelled through the stored receipt.",
+    "Use the cancellation instructions in your library confirmation email.",
+    false,
+  ],
+  ROOM_STATE_INVALID: [
+    500,
+    "The encrypted booking history could not be read.",
+    "Restore the original state and encryption key. Do not replace history or retry uncertain bookings.",
+    false,
+  ],
   CONFIG_INVALID: [
     500,
     "Service configuration is incomplete.",

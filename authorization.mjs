@@ -2,6 +2,9 @@ import { mkdir, readFile, writeFile, rename, open } from "node:fs/promises";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 export const READ_TOOLS = new Set([
+  "list_study_rooms",
+  "get_study_room_availability",
+  "get_study_room_bookings",
   "get_course_outline",
   "get_odyssey_schedule",
   "check_auth",
@@ -25,7 +28,15 @@ export const READ_TOOLS = new Set([
   "transcribe_course_media",
   "read_course_link",
 ]);
-export const KNOWN_TOOLS = new Set([...READ_TOOLS, "download_file"]);
+export const ROOM_WRITE_TOOLS = new Set([
+  "book_study_room",
+  "cancel_study_room_booking",
+]);
+export const KNOWN_TOOLS = new Set([
+  ...READ_TOOLS,
+  "download_file",
+  ...ROOM_WRITE_TOOLS,
+]);
 const stable = (v) =>
   v === null || typeof v !== "object"
     ? JSON.stringify(v)
@@ -63,11 +74,12 @@ export class Authorizations {
     await writeFile(p + ".pending", JSON.stringify(r), { mode: 0o600 });
     await rename(p + ".pending", p);
   }
-  async request(name, args, caller) {
+  async request(name, args, caller, summary) {
     const r = {
       id: randomBytes(24).toString("hex"),
       nonce: randomBytes(32).toString("hex"),
       name,
+      summary,
       args,
       caller,
       digest: digest(name, args, caller),
@@ -108,11 +120,12 @@ export class Authorizations {
   }
   async page(id) {
     const r = await this.read(id);
-    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p><pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
+    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p>${r.summary ? `<h2>Review the exact action</h2><pre>${escape(JSON.stringify(r.summary, null, 2))}</pre>` : ""}<pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
   }
 }
 export function needsApproval(name, args) {
   return (
+    ROOM_WRITE_TOOLS.has(name) ||
     name === "download_file" ||
     (name === "get_syllabus" && args.downloadPath !== undefined)
   );
@@ -134,14 +147,22 @@ export function describeTool(t) {
     ...t,
     annotations: {
       ...t.annotations,
-      readOnlyHint: t.name !== "download_file" && t.name !== "get_syllabus",
-      destructiveHint: t.name === "download_file" || t.name === "get_syllabus",
+      readOnlyHint:
+        !ROOM_WRITE_TOOLS.has(t.name) &&
+        t.name !== "download_file" &&
+        t.name !== "get_syllabus",
+      destructiveHint:
+        ROOM_WRITE_TOOLS.has(t.name) ||
+        t.name === "download_file" ||
+        t.name === "get_syllabus",
     },
-    ...(["download_file", "get_syllabus"].includes(t.name)
+    ...(["download_file", "get_syllabus", ...ROOM_WRITE_TOOLS].includes(t.name)
       ? {
           description:
             t.description +
-            " Saving a file requires explicit user approval at the returned approval URL. Retry with the returned authorizationId only after the user approves. Downloads must use /state/downloads.",
+            (ROOM_WRITE_TOOLS.has(t.name)
+              ? " This action requires explicit owner approval. Open the returned approval URL for the owner and retry the exact arguments with authorizationId only after approval."
+              : " Saving a file requires explicit user approval at the returned approval URL. Retry with the returned authorizationId only after the user approves. Downloads must use /state/downloads."),
           inputSchema: {
             ...t.inputSchema,
             properties: {

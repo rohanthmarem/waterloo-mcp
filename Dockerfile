@@ -8,7 +8,7 @@ RUN python3 -m venv /opt/transcription && /opt/transcription/bin/pip install --n
 COPY upstream ./upstream
 COPY src ./src
 COPY scripts ./scripts
-COPY gateway.mjs authorization.mjs outlines.mjs renew.mjs transcribe.py ./
+COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs renew.mjs transcribe.py ./
 RUN npm run build
 ENV NODE_ENV=production WATERLOO_SERVICE=1 WATERLOO_BIND=0.0.0.0 WATERLOO_STATE_DIR=/state WATERLOO_SECRETS_DIR=/run/secrets D2L_BASE_URL=https://learn.uwaterloo.ca D2L_SESSION_DIR=/state/sessions
 USER pwuser

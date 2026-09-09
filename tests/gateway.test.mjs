@@ -44,7 +44,21 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
     },
     close: async () => {},
   };
-  const app = createGateway(config, async () => worker);
+  let roomWrites = 0;
+  const app = createGateway(config, async () => worker, {
+    libcal: {
+      preview: async () => ({
+        room: "Room Test",
+        library: "Davis Centre Library",
+        start: "2026-09-10 13:00",
+        end: "2026-09-10 14:00",
+      }),
+      call: async () => {
+        roomWrites++;
+        return { content: [{ type: "text", text: '{"status":"confirmed"}' }] };
+      },
+    },
+  });
   await new Promise((resolve) => app.listen(0, "127.0.0.1", resolve));
   const base = "http://127.0.0.1:" + app.address().port;
   const owner = { "X-ExeDev-Email": config.owner };
@@ -79,6 +93,84 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
       JSON.parse(unknown.content[0].text).error.code,
       "TOOL_UNSUPPORTED",
     );
+    const bookingArgs = {
+      roomId: 10,
+      date: "2026-09-10",
+      startTime: "13:00",
+      durationMinutes: 60,
+      bookingRequestId: "b3271bc4-5ab2-4a7b-82a3-26b7c702595c",
+    };
+    const bookingPending = JSON.parse(
+      (await c.callTool({ name: "book_study_room", arguments: bookingArgs }))
+        .content[0].text,
+    ).error;
+    assert.equal(bookingPending.code, "APPROVAL_REQUIRED");
+    assert.equal(roomWrites, 0);
+    const bookingPath = new URL(bookingPending.approvalUrl).pathname;
+    const bookingHtml = await (
+      await fetch(base + bookingPath, { headers: owner })
+    ).text();
+    assert(bookingHtml.includes("Davis Centre Library"));
+    assert(bookingHtml.includes("13:00"));
+    const bookingNonce = bookingHtml.match(
+      /name="nonce" value="([a-f0-9]+)"/,
+    )[1];
+    await fetch(base + bookingPath, {
+      method: "POST",
+      headers: {
+        ...owner,
+        Origin: config.origin,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ nonce: bookingNonce, decision: "approve" }),
+    });
+    assert(
+      (
+        await c.callTool({
+          name: "book_study_room",
+          arguments: {
+            ...bookingArgs,
+            startTime: "14:00",
+            authorizationId: bookingPending.authorizationId,
+          },
+        })
+      ).isError,
+    );
+    assert.equal(roomWrites, 0);
+    assert(
+      !(
+        await c.callTool({
+          name: "book_study_room",
+          arguments: {
+            ...bookingArgs,
+            authorizationId: bookingPending.authorizationId,
+          },
+        })
+      ).isError,
+    );
+    assert.equal(roomWrites, 1);
+    assert(
+      (
+        await c.callTool({
+          name: "book_study_room",
+          arguments: {
+            ...bookingArgs,
+            authorizationId: bookingPending.authorizationId,
+          },
+        })
+      ).isError,
+    );
+    assert.equal(roomWrites, 1);
+    const cancelPending = JSON.parse(
+      (
+        await c.callTool({
+          name: "cancel_study_room_booking",
+          arguments: { bookingId: bookingArgs.bookingRequestId },
+        })
+      ).content[0].text,
+    ).error;
+    assert.equal(cancelPending.code, "APPROVAL_REQUIRED");
+    assert.equal(roomWrites, 1);
     const args = {
       courseId: 1,
       topicId: 2,

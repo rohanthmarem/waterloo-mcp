@@ -1,4 +1,15 @@
-# Verification for 0.1.0
+# Verification for 0.2.0
+
+The room catalog and availability were read live from all three Waterloo libraries. The saved Waterloo session reached the authenticated LibCal checkout form without another password or Duo prompt. No final reservation was submitted during inspection; temporary checkout holds expired and availability was checked again.
+
+- 15 gateway, setup, room data, and booking-history tests passed.
+- 402 vendored library tests passed for this update; 3 optional upstream browser tests were skipped.
+- Three real Chromium form tests passed in an isolated Linux container with networking disabled: confirmed response, uncertain response, and a new required question.
+- Bookings and cancellations require separate owner approval. Tests cover exact arguments, changed times, single use, duplicate request IDs, encrypted receipts, and uncertain outcomes after restart.
+- The updated production server listed all 28 tools over its private HTTPS endpoint using the existing agent token. Authentication, course listing, Odyssey, the 23-room catalog, availability, and empty booking history passed live checks.
+- A real booking and cancellation remain untested until the owner chooses a useful slot and approves them. See [study rooms](study-rooms.md).
+
+## Previous release: 0.1.0
 
 Checked on 2026-09-09. These results describe this source release, not a guarantee about another person’s school account.
 

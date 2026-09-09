@@ -1,6 +1,6 @@
 # Waterloo MCP
 
-Give your cloud agents access to your Waterloo LEARN courses, Odyssey assessment schedule, and published course outlines. Run one private server on your own exe.dev VM and connect any MCP client that supports Streamable HTTP with a custom authentication header.
+Give your cloud agents access to your Waterloo LEARN courses, Odyssey assessment schedule, published course outlines, and library study-room bookings. Run one private server on your own exe.dev VM and connect any MCP client that supports Streamable HTTP with a custom authentication header.
 
 **Each person deploys their own instance and signs in with their own Waterloo account.** Sharing this repository does not share an account, a session, or access to course material.
 
@@ -8,13 +8,13 @@ This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MC
 
 ## What you get
 
-- 23 tools for courses, announcements, grades, assignments, discussions, course content, outlines, and Odyssey.
+- 28 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Odyssey, and library study rooms.
 - Text extraction from HTML, PDFs and Office files; PDF page images for handwritten notes; local audio/video transcription.
 - Separate tokens for your agents, with expiry and revocation.
-- Browser approval before a tool saves a download. Agents cannot approve their own requests through their MCP token.
+- Browser approval before a tool saves a download, books a room, or cancels a booking. Agents cannot approve their own requests through their MCP token.
 - Encrypted saved login state, repeatable Docker deployment, and errors with a code and a next step.
 
-See [tool coverage and limits](docs/tools.md). Outlook mail is not included.
+See [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md). Outlook mail is not included.
 
 ## Set up your own server
 
@@ -124,6 +124,7 @@ Read [error codes](docs/errors.md), [operations and recovery](docs/operations.md
 gateway.mjs          Private HTTP MCP server and owner pages
 authorization.mjs    Tool allowlist and one-use approvals
 outlines.mjs         Course outline discovery
+libcal.mjs           Study-room tools and encrypted booking history
 src/                 Configuration, errors, bounded read cache
 scripts/             Setup, login, client tokens, deploy, diagnostics
 upstream/            Vendored MIT Brightspace client plus Waterloo readers
@@ -132,4 +133,4 @@ tests/               Access, approval, error, cache and setup tests
 private/             Your local secrets and state; never shared
 ```
 
-Release 0.1.0 is an initial source release. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Release 0.2.0 adds study-room support. Real booking and cancellation submission still need an owner-approved live test. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
