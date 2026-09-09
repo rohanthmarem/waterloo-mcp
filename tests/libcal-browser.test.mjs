@@ -58,6 +58,7 @@ for (const scenario of [
   "confirmed",
   "unknown outcome",
   "new required question",
+  "external checkout form",
 ])
   test("real Chromium checkout: " + scenario, { skip: !enabled }, async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "waterloo-room-browser-"));
@@ -78,7 +79,7 @@ for (const scenario of [
     let submissions = 0,
       recorded = 0,
       cleaned = 0;
-    const pageHtml = `<main><div id="s-lc-public-page-content"><div id="s-lc-eq-co-itemlist"><table><tbody><tr><td>Room Test</td><td>1:00pm Thursday, September 10, 2026</td><td>2:00pm Thursday, September 10, 2026</td></tr></tbody></table></div><button id="terms_accept" onclick="document.querySelector('form').style.display='block'">Continue</button><form id="s-lc-eq-bform" action="/ajax/equipment/checkout" style="display:none"><fieldset><legend>Booking Form</legend><div class="s-lc-eq-email"><p class="form-control-static">student@uwaterloo.ca</p></div><fieldset><legend>I acknowledge the Terms &amp; Conditions</legend><label><input type="checkbox" name="q1[]" value="Yes">Yes</label></fieldset>${scenario === "new required question" ? '<input name="unexpected" required>' : ""}<button type="submit" id="btn-form-submit">Submit my Booking</button></fieldset></form></div></main><script>var springyPage={sessionId:123};document.querySelector('form').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ajax/equipment/checkout',{method:'POST'});document.querySelector('#s-lc-public-page-content').innerHTML=await r.text();};</script>`;
+    const pageHtml = `<main><div id="s-lc-public-page-content"><div id="s-lc-eq-co-itemlist"><table><tbody><tr><td>Room Test</td><td>1:00pm Thursday, September 10, 2026</td><td>2:00pm Thursday, September 10, 2026</td></tr></tbody></table></div><button id="terms_accept" onclick="document.querySelector('form').style.display='block'">Continue</button><form id="s-lc-eq-bform" action="${scenario === "external checkout form" ? "https://example.invalid" : ""}/ajax/equipment/checkout" method="post" style="display:none"><fieldset><legend>Booking Form</legend><div class="s-lc-eq-email"><p class="form-control-static">student@uwaterloo.ca</p></div><fieldset><legend>I acknowledge the Terms &amp; Conditions</legend><label><input type="checkbox" name="q1[]" value="Yes">Yes</label></fieldset>${scenario === "new required question" ? '<input name="unexpected" required>' : ""}<button type="submit" id="btn-form-submit">Submit my Booking</button></fieldset></form></div></main><script>var springyPage={sessionId:123};document.querySelector('form').onsubmit=async e=>{e.preventDefault();const r=await fetch('/ajax/equipment/checkout',{method:'POST'});let body=await r.text();try{body=JSON.parse(body);}catch{}document.querySelector('#s-lc-public-page-content').innerHTML=body;};</script>`;
     const driver = new LibCalBrowser(
       { username: "student@uwaterloo.ca", stateDir: dir, secretsDir },
       catalog,
@@ -122,7 +123,9 @@ for (const scenario of [
                   body:
                     scenario === "unknown outcome"
                       ? "<p>Response interrupted</p>"
-                      : '<p class="s-lc-eq-booking-status-msg">Your booking is confirmed.</p><a href="/equipment/cancel?code=fixture">Cancel Booking</a>',
+                      : JSON.stringify(
+                          '<h1 class="s-lc-eq-success-title">Booking Confirmed</h1><p class="s-lc-eq-booking-status-msg">Your booking has been submitted.</p><a href="/equipment/cancel?code=fixture">Cancel Booking</a>',
+                        ),
                 });
               } else await route.abort();
             });
@@ -152,7 +155,7 @@ for (const scenario of [
           ),
         );
         assert.equal(submissions, scenario === "unknown outcome" ? 1 : 0);
-        assert.equal(cleaned, scenario === "new required question" ? 1 : 0);
+        assert.equal(cleaned, scenario === "unknown outcome" ? 0 : 1);
       }
     } finally {
       await rm(dir, { recursive: true, force: true });

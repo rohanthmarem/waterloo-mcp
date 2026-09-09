@@ -33,6 +33,30 @@ export function trustedCancelUrl(value) {
     return null;
   }
 }
+export async function readBookingConfirmation(page) {
+  const status = await page
+    .locator(".s-lc-eq-booking-status-msg")
+    .innerText({ timeout: 10000 })
+    .catch(() => null);
+  const headings = await page
+    .locator(".s-lc-eq-success-title")
+    .allTextContents();
+  const text = [...headings, status ?? ""].join(" ");
+  if (
+    !status ||
+    !/confirmed|successfully\s+booked|booking\s+complete/i.test(text) ||
+    /not\s+confirmed|unconfirmed|failed|error/i.test(text)
+  )
+    fail("ROOM_BOOKING_UNKNOWN");
+  const links = await page
+    .locator("#s-lc-public-page-content a[href]")
+    .evaluateAll((as) => as.map((a) => a.href));
+  return {
+    status: "confirmed",
+    cancellationUrl: links.map(trustedCancelUrl).find(Boolean) ?? null,
+    confirmedAt: new Date().toISOString(),
+  };
+}
 export class LibCalBrowser {
   constructor(
     config,
@@ -208,10 +232,15 @@ export class LibCalBrowser {
       const html = await page.content();
       sessionId = html.match(/sessionId:\s*(\d+)/)?.[1];
       const form = page.locator("#s-lc-eq-bform");
+      if ((await form.count()) !== 1) fail("ROOM_PAGE_CHANGED");
+      const formAction = new URL(
+        await form.getAttribute("action"),
+        LIBCAL_ORIGIN,
+      );
       if (
-        (await form.count()) !== 1 ||
-        new URL(await form.getAttribute("action"), LIBCAL_ORIGIN).pathname !==
-          "/ajax/equipment/checkout"
+        formAction.origin !== LIBCAL_ORIGIN ||
+        formAction.pathname !== "/ajax/equipment/checkout" ||
+        (await form.getAttribute("method"))?.toLowerCase() !== "post"
       )
         fail("ROOM_PAGE_CHANGED");
       stage = "account-check";
@@ -287,25 +316,7 @@ export class LibCalBrowser {
         receivedAt: new Date().toISOString(),
       });
       if (!response.ok()) fail("ROOM_BOOKING_UNKNOWN");
-      const status = await page
-        .locator(".s-lc-eq-booking-status-msg")
-        .innerText({ timeout: 10000 })
-        .catch(() => null);
-      if (
-        !status ||
-        !/confirmed|successfully\s+booked|booking\s+complete/i.test(status) ||
-        /not\s+confirmed|failed|error/i.test(status)
-      )
-        fail("ROOM_BOOKING_UNKNOWN");
-      const links = await page
-        .locator("#s-lc-public-page-content a[href]")
-        .evaluateAll((as) => as.map((a) => a.href));
-      const cancellationUrl = links.map(trustedCancelUrl).find(Boolean) ?? null;
-      return {
-        status: "confirmed",
-        cancellationUrl,
-        confirmedAt: new Date().toISOString(),
-      };
+      return await readBookingConfirmation(page);
     } catch (error) {
       if (!submitted) {
         await saveReceipt({

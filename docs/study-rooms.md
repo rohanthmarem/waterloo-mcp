@@ -51,6 +51,8 @@ A failed pre-submission attempt tries to release its temporary cart hold when th
 
 ## Verification status
 
-Live room discovery and availability have been checked for all three libraries. The existing saved Waterloo session reached the authenticated booking form. Local and isolated Linux Chromium tests cover successful form submission, a changed required question, and an uncertain response without making a real reservation. Approval, exact-argument matching, encrypted history, and duplicate protection have automated tests.
+Live room discovery and availability have been checked for all three libraries. The existing saved Waterloo session reached the authenticated booking form. Local and isolated Linux Chromium tests cover successful form submission, a changed required question, an external form action, and an uncertain response without making a real reservation. Approval, exact-argument matching, encrypted history, and duplicate protection have automated tests.
 
-A real booking and cancellation have not yet been submitted for this release. They require the owner to choose a useful slot and approve each action. Cancellation support also depends on the confirmation page providing a recognized link.
+An owner-approved live booking was confirmed by Waterloo. The live form exposed nested field groups and a confirmation heading with different wording from its paragraph; both are covered by the updated browser tests. The encrypted response allowed the confirmed booking record to be recovered without another submission.
+
+The observed confirmation page supplied no cancellation link. For that booking, the MCP reports `cancellationAvailable: false` and directs the owner to the confirmation email. A real cancellation remains untested, and cancellation support depends on a recognized link being present.
