@@ -133,4 +133,4 @@ tests/               Access, approval, error, cache and setup tests
 private/             Your local secrets and state; never shared
 ```
 
-Release 0.2.0 adds study-room support, verified with an owner-approved live booking. Waterloo’s confirmation page did not supply a cancellation link, so that booking must be cancelled through its confirmation email. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Release 0.2.0 adds study-room support, verified with an owner-approved live booking. Waterloo’s web confirmation may omit the cancellation link; its email then supplies the link needed for cancellation. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).

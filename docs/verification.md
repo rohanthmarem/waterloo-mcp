@@ -8,7 +8,7 @@ The room catalog and availability were read live from all three Waterloo librari
 - Bookings and cancellations require separate owner approval. Tests cover exact arguments, changed times, single use, duplicate request IDs, encrypted receipts, and uncertain outcomes after restart.
 - The updated production server listed all 28 tools over its private HTTPS endpoint using the existing agent token. Authentication, course listing, Odyssey, the 23-room catalog, availability, and empty booking history passed live checks.
 - One owner-approved real booking was submitted and confirmed by Waterloo. The confirmation response was retained encrypted and used to recover the booking record after its heading exposed a parser mismatch. The corrected parser was checked against that saved response without resubmitting.
-- The confirmation supplied no cancellation link. This real reservation requires the owner’s confirmation email for cancellation. No real cancellation was submitted. See [study rooms](study-rooms.md).
+- The web confirmation supplied no cancellation link. The owner subsequently supplied the confirmation email, which matched the booking and included that link. An operator stored it encrypted without opening it. The MCP reported the confirmed booking with cancellation available. No real cancellation was submitted. See [study rooms](study-rooms.md).
 
 ## Previous release: 0.1.0
 

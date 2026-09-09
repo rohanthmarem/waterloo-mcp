@@ -55,4 +55,6 @@ Live room discovery and availability have been checked for all three libraries. 
 
 An owner-approved live booking was confirmed by Waterloo. The live form exposed nested field groups and a confirmation heading with different wording from its paragraph; both are covered by the updated browser tests. The encrypted response allowed the confirmed booking record to be recovered without another submission.
 
-The observed confirmation page supplied no cancellation link. For that booking, the MCP reports `cancellationAvailable: false` and directs the owner to the confirmation email. A real cancellation remains untested, and cancellation support depends on a recognized link being present.
+The observed web confirmation supplied no cancellation link; the owner’s confirmation email did. An operator attached that verified email link to the encrypted booking record without opening it or requesting cancellation. The MCP then reported `cancellationAvailable: true`. This email import was manual; the MCP does not read the mailbox.
+
+Without a saved link, the MCP reports `cancellationAvailable: false` and directs the owner to the confirmation email. A real cancellation remains untested. Saving a link does not prove the cancellation flow works; any later cancellation still needs separate approval.
