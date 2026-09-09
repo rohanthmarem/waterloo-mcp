@@ -1,0 +1,5 @@
+node_modules/
+upstream/
+private/
+package-lock.json
+requirements-transcription.lock

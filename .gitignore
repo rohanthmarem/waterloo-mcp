@@ -1,0 +1,14 @@
+node_modules/
+**/node_modules/
+**/build/
+private/
+.env
+.env.*
+!.env.example
+*.log
+*.secret
+*.pem
+*.key
+*.zip
+coverage/
+.DS_Store

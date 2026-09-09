@@ -1,0 +1,49 @@
+{
+  "name": "waterloo-mcp",
+  "version": "0.1.0",
+  "description": "Personal Waterloo LEARN, Odyssey and course outline access over MCP.",
+  "type": "module",
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "login": "node scripts/login.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "client": "node scripts/client.mjs",
+    "build": "tsc -p upstream",
+    "test": "node --test tests/*.test.mjs",
+    "test:upstream": "vitest run --root upstream --config vitest.config.ts",
+    "start": "node gateway.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "check": "npm run build && npm test",
+    "deploy": "node scripts/deploy.mjs",
+    "enroll": "node scripts/enroll.mjs enroll",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "audit:package": "node scripts/audit-package.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "@napi-rs/keyring": "^2.0.0",
+    "ajv": "^8.18.0",
+    "dotenv": "^17.2.4",
+    "file-type": "^21.3.0",
+    "playwright": "^1.58.2",
+    "sanitize-filename": "^1.6.3",
+    "trash": "^10.1.1",
+    "turndown": "^7.2.2",
+    "unpdf": "^1.4.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/sanitize-filename": "^1.1.28",
+    "@types/turndown": "^5.0.6",
+    "prettier": "3.6.2",
+    "typescript": "^5.9.0",
+    "vitest": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "private": true
+}

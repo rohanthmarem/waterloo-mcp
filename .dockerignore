@@ -1,0 +1,9 @@
+**/.git
+**/node_modules
+**/build
+private
+.env
+.env.*
+*.log
+*.zip
+tests

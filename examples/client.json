@@ -1,0 +1,6 @@
+{
+  "url": "https://YOUR-VM.exe.xyz/mcp",
+  "headers": {
+    "X-Exedev-Authorization": "Bearer <load-from-your-agent-secret-store>"
+  }
+}

@@ -1,0 +1,18 @@
+services:
+  mcp:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:8000:8000"
+    shm_size: 1gb
+    read_only: true
+    tmpfs:
+      - /tmp:size=768m,mode=1777
+    volumes:
+      - ./private/state:/state
+      - ./private/secrets:/run/secrets:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
