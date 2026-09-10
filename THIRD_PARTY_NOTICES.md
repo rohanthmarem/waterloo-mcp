@@ -6,4 +6,6 @@ The included source also contains Waterloo-specific session handling, read tools
 
 Node dependencies are recorded in `package-lock.json`. Python transcription dependencies are recorded in `requirements-transcription.lock`. Their own licenses apply. The Docker base image and the downloaded speech model also retain their own licenses.
 
+Piazza integration research used the MIT [hfaran/piazza-api client](https://github.com/hfaran/piazza-api) and read requests observed in Piazza’s own web application. That client is not bundled or installed. The implementation is an unofficial HTTP client and does not imply an official Piazza API agreement.
+
 Names and marks identify compatible services and do not imply endorsement.

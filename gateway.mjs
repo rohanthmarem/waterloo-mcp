@@ -24,6 +24,8 @@ import { readConfig, workerEnv, root } from "./src/config.mjs";
 import { problem, toolError, normalizeToolResult } from "./src/errors.mjs";
 import { ReadCache } from "./src/read-cache.mjs";
 import { encrypt } from "./upstream/build/auth/encrypted-store.js";
+import { PiazzaSession, PiazzaError } from "./src/piazza-session.mjs";
+import { Piazza, piazzaTools, piazzaSchemas } from "./piazza.mjs";
 
 const expensive = new Set([
   "get_course_home",
@@ -67,10 +69,14 @@ async function body(req) {
 export function createGateway(
   config,
   createClient,
-  { libcal = new LibCal(config) } = {},
+  {
+    libcal = new LibCal(config),
+    piazzaSession = new PiazzaSession(config),
+  } = {},
 ) {
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
+  const piazza = new Piazza(piazzaSession);
   let upstream;
   async function client() {
     upstream ??= createClient().catch(() => {
@@ -109,10 +115,41 @@ export function createGateway(
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (req.url === "/setup/piazza" && req.method === "GET")
+        return reply(
+          res,
+          200,
+          `<title>Connect Piazza</title><h1>Connect your Piazza account</h1><p>The server verifies your Piazza login, then encrypts the password and session for automatic renewal. Your agents receive course content through MCP; they cannot read this form or the saved credentials.</p><form method="post"><label>Piazza email <input type="email" name="email" value="${escape(config.username ?? "")}" required maxlength="254" autocomplete="username"></label><br><label>Piazza password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><br><button>Verify and save encrypted Piazza login</button></form>`,
+          "text/html; charset=utf-8",
+        );
+      if (req.url === "/setup/piazza" && req.method === "POST") {
+        if (
+          req.headers.origin !== config.origin ||
+          !req.headers["content-type"]?.startsWith(
+            "application/x-www-form-urlencoded",
+          )
+        )
+          return httpError(res, "ORIGIN_REJECTED");
+        const form = new URLSearchParams(await body(req));
+        try {
+          await piazzaSession.connect(form.get("email"), form.get("password"));
+          return reply(
+            res,
+            200,
+            "<h1>Piazza connected</h1><p>Login verified and saved encrypted. The saved login is ready for Piazza requests.</p>",
+            "text/html; charset=utf-8",
+          );
+        } catch (error) {
+          return httpError(
+            res,
+            error instanceof PiazzaError ? error.code : "UPSTREAM_UNAVAILABLE",
+          );
+        }
+      }
       if (req.url === "/status" && req.method === "GET")
         return reply(res, 200, {
           service: "waterloo-mcp",
-          version: "0.2.0",
+          version: "0.3.0",
           status: "running",
         });
       if (req.url?.startsWith("/approvals/")) {
@@ -156,7 +193,7 @@ export function createGateway(
         return reply(
           res,
           200,
-          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
+          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
           "text/html; charset=utf-8",
         );
       if (req.url === "/setup" && req.method === "POST") {
@@ -213,7 +250,7 @@ export function createGateway(
         );
       }
       const server = new Server(
-        { name: "waterloo-mcp", version: "0.2.0" },
+        { name: "waterloo-mcp", version: "0.3.0" },
         { capabilities: { tools: {} } },
       );
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -221,6 +258,7 @@ export function createGateway(
           ...(await (await client()).listTools()).tools,
           outlineTool,
           ...roomTools,
+          ...piazzaTools,
         ]
           .filter((t) => KNOWN_TOOLS.has(t.name))
           .map(describeTool),
@@ -274,15 +312,17 @@ export function createGateway(
         try {
           const run = async () =>
             normalizeToolResult(
-              roomSchemas[name]
-                ? await libcal.call(name, args)
-                : name === "get_course_outline"
-                  ? await getCourseOutline(await client(), args)
-                  : await (
-                      await client()
-                    ).callTool({ name, arguments: args }, undefined, {
-                      timeout: 180000,
-                    }),
+              Object.hasOwn(piazzaSchemas, name)
+                ? await piazza.call(name, args)
+                : roomSchemas[name]
+                  ? await libcal.call(name, args)
+                  : name === "get_course_outline"
+                    ? await getCourseOutline(await client(), args)
+                    : await (
+                        await client()
+                      ).callTool({ name, arguments: args }, undefined, {
+                        timeout: 180000,
+                      }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
@@ -322,7 +362,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     const config = readConfig();
     const app = createGateway(config, async () => {
-      const c = new Client({ name: "waterloo-gateway", version: "0.2.0" });
+      const c = new Client({ name: "waterloo-gateway", version: "0.3.0" });
       await c.connect(
         new StdioClientTransport({
           command: process.execPath,

@@ -58,6 +58,22 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
         return { content: [{ type: "text", text: '{"status":"confirmed"}' }] };
       },
     },
+    piazzaSession: {
+      connect: async () => ({ connected: true }),
+      run: async (operation) =>
+        operation(
+          async (method) => {
+            if (method === "user.status")
+              return {
+                id: "test-owner",
+                networks: [{ id: "test-class", name: "Test class" }],
+                sid: "do-not-return",
+              };
+            return { feed: [], more: false };
+          },
+          { uid: "test-owner" },
+        ),
+    },
   });
   await new Promise((resolve) => app.listen(0, "127.0.0.1", resolve));
   const base = "http://127.0.0.1:" + app.address().port;
@@ -69,6 +85,24 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
   const c = new Client({ name: "integration-test", version: "1" });
   try {
     assert.equal((await fetch(base + "/status")).status, 401);
+    assert.equal(
+      (await fetch(base + "/setup/piazza", { headers: token })).status,
+      403,
+    );
+    assert.equal(
+      (await fetch(base + "/setup/piazza", { headers: owner })).status,
+      200,
+    );
+    assert.equal(
+      (
+        await fetch(base + "/setup/piazza", {
+          method: "POST",
+          headers: owner,
+          body: "email=student%40example.test&password=private-value",
+        })
+      ).status,
+      403,
+    );
     assert.equal(
       (
         await fetch(base + "/status", {
@@ -85,6 +119,24 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
     const catalog = await c.listTools();
     assert(!catalog.tools.some((t) => t.name === "delete_everything"));
     assert(catalog.tools.some((t) => t.name === "get_course_outline"));
+    assert.equal(
+      catalog.tools.filter((t) => t.name.includes("piazza")).length,
+      6,
+    );
+    const piazzaAuth = await c.callTool({
+      name: "check_piazza_auth",
+      arguments: {},
+    });
+    assert.equal(JSON.parse(piazzaAuth.content[0].text).authenticated, true);
+    assert(!JSON.stringify(piazzaAuth).includes("do-not-return"));
+    const piazzaInvalid = await c.callTool({
+      name: "get_piazza_feed",
+      arguments: { classId: "test-class", method: "content.create" },
+    });
+    assert.equal(
+      JSON.parse(piazzaInvalid.content[0].text).error.code,
+      "INPUT_INVALID",
+    );
     const unknown = await c.callTool({
       name: "delete_everything",
       arguments: { approved: true },

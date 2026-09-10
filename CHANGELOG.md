@@ -1,5 +1,12 @@
 # Changes
 
+## 0.3.0
+
+- Add six read-only Piazza tools for class lists, feeds, search, published course information, and full current discussions.
+- Add private owner setup, encrypted Piazza credentials, and browser-free session renewal on the VM.
+- Preserve math notation, include nested replies, and page long text without exposing author IDs, drafts, or raw account metadata.
+- Add explicit Piazza errors, membership checks, and tests for authentication, privacy, pagination, and blocked writes.
+
 ## 0.2.0
 
 - Add five LibCal study-room tools across Davis Centre, Dana Porter, and Musagetes.

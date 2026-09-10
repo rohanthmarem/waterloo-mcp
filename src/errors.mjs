@@ -1,6 +1,36 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  PIAZZA_AUTH_REQUIRED: [
+    401,
+    "Piazza needs a valid sign-in.",
+    "Open /setup/piazza in the owner browser and verify your Piazza account. This can use a different password from Waterloo. Automatic renewal is limited after a failed login.",
+    false,
+  ],
+  PIAZZA_STATE_INVALID: [
+    500,
+    "The encrypted Piazza login could not be read.",
+    "Restore the matching state and session key, or reconnect Piazza through the owner setup page.",
+    false,
+  ],
+  PIAZZA_FORBIDDEN: [
+    403,
+    "Piazza denied access to this class or post.",
+    "Check that your Piazza account belongs to the class and can open this post.",
+    false,
+  ],
+  PIAZZA_NOT_FOUND: [
+    404,
+    "The Piazza class or post was not found.",
+    "Refresh your Piazza class list and verify the post ID.",
+    false,
+  ],
+  PIAZZA_RESPONSE_CHANGED: [
+    502,
+    "The Piazza response was not recognized.",
+    "Report this code and the operation. Do not repeatedly sign in or guess alternate API methods.",
+    false,
+  ],
   ROOM_NOT_FOUND: [
     404,
     "The study room was not found.",

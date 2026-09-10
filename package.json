@@ -1,7 +1,7 @@
 {
   "name": "waterloo-mcp",
-  "version": "0.2.0",
-  "description": "Personal Waterloo LEARN, Odyssey, course outlines, and study rooms over MCP.",
+  "version": "0.3.0",
+  "description": "Personal Waterloo LEARN, Piazza, Odyssey, course outlines, and study rooms over MCP.",
   "type": "module",
   "scripts": {
     "setup": "node scripts/setup.mjs",

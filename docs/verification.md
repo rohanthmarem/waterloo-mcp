@@ -1,4 +1,18 @@
-# Verification for 0.2.0
+# Verification for 0.3.0
+
+Checked on 2026-09-09. The private HTTPS MCP served 34 tools, including six new Piazza readers, using the existing agent token.
+
+- 23 gateway, setup, room, and Piazza tests passed. These cover encrypted credential reuse after restart, automatic renewal and failed-login cooldown, class membership, blocked API writes, anonymous author privacy, nested discussions, math notation, search, text pagination, and stable errors.
+- 402 vendored library tests passed; 3 optional upstream browser tests were skipped.
+- All four account classes were listed. Feed pagination reached 31 unique accessible posts across the four classes. The current post bodies and nested discussions were read through the HTTPS MCP, including real instructor and student answers and follow-up replies. Long-post continuation was exercised.
+- Search was checked in all four classes, including an empty result. All four classes had empty published course-information fields; the tools reported that explicitly. Attachment contents, historical revisions, and poll results were not tested or included.
+- One initial post call returned `PIAZZA_RESPONSE_CHANGED`. A later check of every post in that class succeeded; the original response was not retained, so its cause is unknown. The server keeps an explicit error for an unrecognized response instead of claiming the read succeeded.
+- Only the encrypted Piazza record’s cookies were cleared for a controlled renewal check. A fresh HTTPS MCP call signed in using the saved password and persisted a new session without a local browser, new credentials, or user input. Waterloo state and the authenticator were not changed by that check.
+- LEARN authentication, course listing, and existing room-booking history still passed live reads. Unknown Piazza create/edit/message tools were rejected with `TOOL_UNSUPPORTED`. No Piazza write or new reservation was sent.
+- Grok Bot reloaded its host catalog from 28 to 34 tools using the same token. It independently verified Piazza authentication, listed all four classes, read the CS 135 feed, and read a complete pinned post.
+- A deliberately missing post returned Piazza’s actual “cannot be found” response. Its error mapping is covered by a regression test.
+
+## Previous release: 0.2.0
 
 The room catalog and availability were read live from all three Waterloo libraries. The saved Waterloo session reached the authenticated LibCal checkout form without another password or Duo prompt. No final reservation was submitted during inspection; temporary checkout holds expired and availability was checked again.
 

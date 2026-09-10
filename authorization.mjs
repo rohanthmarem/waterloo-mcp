@@ -2,6 +2,12 @@ import { mkdir, readFile, writeFile, rename, open } from "node:fs/promises";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 export const READ_TOOLS = new Set([
+  "check_piazza_auth",
+  "list_piazza_classes",
+  "get_piazza_course_info",
+  "get_piazza_feed",
+  "search_piazza_posts",
+  "get_piazza_post",
   "list_study_rooms",
   "get_study_room_availability",
   "get_study_room_bookings",

@@ -11,7 +11,7 @@ if (!file) {
   process.exit(2);
 }
 const token = (await readFile(file, "utf8")).trim();
-const c = new Client({ name: "waterloo-smoke", version: "0.2.0" });
+const c = new Client({ name: "waterloo-smoke", version: "0.3.0" });
 try {
   await c.connect(
     new StreamableHTTPClientTransport(new URL(config.origin + "/mcp"), {
