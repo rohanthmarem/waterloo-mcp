@@ -12,7 +12,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 const exec = promisify(execFile);
 import { decrypt } from "../auth/encrypted-store.js";
-import { chromium } from "playwright";
+import { withBrowser } from "../utils/browser-pool.js";
 const id = z.number().int().positive();
 const paging = {
   offset: z.number().int().min(0).default(0),
@@ -50,7 +50,6 @@ export function registerReadCoverage(server: McpServer, api: D2LApiClient) {
       inputSchema: z.object({ courseId: id, topicId: id, ...paging }),
     },
     async (args) => {
-      let browser;
       try {
         const topic: any = await api.get(
           api.le(args.courseId, `/content/topics/${args.topicId}`),
@@ -85,8 +84,7 @@ export function registerReadCoverage(server: McpServer, api: D2LApiClient) {
             url: url.href,
             note: "This points to the instructor authoring tool, not a published course outline.",
           });
-        browser = await chromium.launch({ headless: true });
-        let stored;
+        let stored: any;
         if (url.hostname === "outline.uwaterloo.ca") {
           const key = Buffer.from(
             (
@@ -113,38 +111,43 @@ export function registerReadCoverage(server: McpServer, api: D2LApiClient) {
           );
           key.fill(0);
         }
-        const context = await browser.newContext(
-          stored ? { storageState: stored } : {},
-        );
-        const page = await context.newPage();
-        await page.goto(url.href, { waitUntil: "domcontentloaded" });
-        await page
-          .waitForLoadState("networkidle", { timeout: 15000 })
-          .catch(() => {});
-        const finalOrigin = new URL(page.url()).origin;
-        if (finalOrigin !== url.origin)
-          return toolResponse({
-            status: "separate_authentication_required",
-            source: url.href,
-            finalOrigin,
-            note: "The linked page redirected to a login or another service; its contents have not been read.",
-          });
-        const text = await page.locator("body").innerText();
-        return toolResponse({
-          courseId: args.courseId,
-          topicId: args.topicId,
-          title: topic.Title,
-          source: url.href,
-          finalOrigin,
-          ...chunk(text, args.offset, args.maxChars),
-          note: stored
-            ? "Linked Waterloo outline read using the existing Waterloo SSO session."
-            : "Public linked page read without Waterloo credentials.",
+        // A fresh isolated context per read; the browser process is shared.
+        return await withBrowser(async (browser) => {
+          const context = await browser.newContext(
+            stored ? { storageState: stored } : {},
+          );
+          try {
+            const page = await context.newPage();
+            await page.goto(url.href, { waitUntil: "domcontentloaded" });
+            await page
+              .waitForLoadState("networkidle", { timeout: 15000 })
+              .catch(() => {});
+            const finalOrigin = new URL(page.url()).origin;
+            if (finalOrigin !== url.origin)
+              return toolResponse({
+                status: "separate_authentication_required",
+                source: url.href,
+                finalOrigin,
+                note: "The linked page redirected to a login or another service; its contents have not been read.",
+              });
+            const text = await page.locator("body").innerText();
+            return toolResponse({
+              courseId: args.courseId,
+              topicId: args.topicId,
+              title: topic.Title,
+              source: url.href,
+              finalOrigin,
+              ...chunk(text, args.offset, args.maxChars),
+              note: stored
+                ? "Linked Waterloo outline read using the existing Waterloo SSO session."
+                : "Public linked page read without Waterloo credentials.",
+            });
+          } finally {
+            await context.close();
+          }
         });
       } catch (e) {
         return sanitizeError(e);
-      } finally {
-        await browser?.close();
       }
     },
   );
@@ -449,7 +452,6 @@ export function registerReadCoverage(server: McpServer, api: D2LApiClient) {
       inputSchema: z.object({ courseId: id, ...paging }),
     },
     async (args) => {
-      let browser;
       try {
         await api.get(api.lp("/users/whoami"));
         const key = Buffer.from(
@@ -475,55 +477,60 @@ export function registerReadCoverage(server: McpServer, api: D2LApiClient) {
           ),
         );
         key.fill(0);
-        browser = await chromium.launch({ headless: true });
-        const context = await browser.newContext({ storageState: state });
-        const page = await context.newPage();
-        await page.goto(
-          `https://learn.uwaterloo.ca/d2l/home/${args.courseId}`,
-          { waitUntil: "domcontentloaded" },
-        );
-        await page.locator("body").waitFor({ state: "visible" });
-        await page
-          .waitForLoadState("networkidle", { timeout: 10000 })
-          .catch(() => {});
-        if (new URL(page.url()).origin !== "https://learn.uwaterloo.ca")
-          throw new Error("Saved browser login requires renewal");
-        let text = await page.locator("body").innerText();
-        for (const frame of page.frames()) {
-          if (
-            frame !== page.mainFrame() &&
-            frame.url().startsWith("https://learn.uwaterloo.ca/")
-          ) {
-            const extra = await frame
-              .locator("body")
-              .innerText({ timeout: 3000 })
-              .catch(() => "");
-            if (extra.trim()) text += "\n\n[Embedded course content]\n" + extra;
+        // A fresh isolated context per read; the browser process is shared.
+        return await withBrowser(async (browser) => {
+          const context = await browser.newContext({ storageState: state });
+          try {
+            const page = await context.newPage();
+            await page.goto(
+              `https://learn.uwaterloo.ca/d2l/home/${args.courseId}`,
+              { waitUntil: "domcontentloaded" },
+            );
+            await page.locator("body").waitFor({ state: "visible" });
+            await page
+              .waitForLoadState("networkidle", { timeout: 10000 })
+              .catch(() => {});
+            if (new URL(page.url()).origin !== "https://learn.uwaterloo.ca")
+              throw new Error("Saved browser login requires renewal");
+            let text = await page.locator("body").innerText();
+            for (const frame of page.frames()) {
+              if (
+                frame !== page.mainFrame() &&
+                frame.url().startsWith("https://learn.uwaterloo.ca/")
+              ) {
+                const extra = await frame
+                  .locator("body")
+                  .innerText({ timeout: 3000 })
+                  .catch(() => "");
+                if (extra.trim())
+                  text += "\n\n[Embedded course content]\n" + extra;
+              }
+            }
+            const links = await page
+              .locator("a[href]")
+              .evaluateAll((nodes) =>
+                nodes.map((n) => ({
+                  text: (n.textContent ?? "").trim(),
+                  url: (n as HTMLAnchorElement).href,
+                })),
+              );
+            const frames = page
+              .frames()
+              .filter((f) => f !== page.mainFrame())
+              .map((f) => ({ url: new URL(f.url() || "about:blank").origin }));
+            return toolResponse({
+              courseId: args.courseId,
+              ...chunk(text, args.offset, args.maxChars),
+              links,
+              embeddedFrames: frames,
+              note: "Visible homepage text only; external embedded tools are separate from the LEARN API.",
+            });
+          } finally {
+            await context.close();
           }
-        }
-        const links = await page
-          .locator("a[href]")
-          .evaluateAll((nodes) =>
-            nodes.map((n) => ({
-              text: (n.textContent ?? "").trim(),
-              url: (n as HTMLAnchorElement).href,
-            })),
-          );
-        const frames = page
-          .frames()
-          .filter((f) => f !== page.mainFrame())
-          .map((f) => ({ url: new URL(f.url() || "about:blank").origin }));
-        return toolResponse({
-          courseId: args.courseId,
-          ...chunk(text, args.offset, args.maxChars),
-          links,
-          embeddedFrames: frames,
-          note: "Visible homepage text only; external embedded tools are separate from the LEARN API.",
         });
       } catch (e) {
         return sanitizeError(e);
-      } finally {
-        await browser?.close();
       }
     },
   );

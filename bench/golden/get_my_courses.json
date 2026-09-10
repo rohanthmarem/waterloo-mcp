@@ -1,0 +1,46 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": [
+        {
+          "id": 101,
+          "name": "BENCH 101 Course 1",
+          "code": "BENCH101",
+          "role": "Student",
+          "isActive": true,
+          "canAccess": true,
+          "lastAccessed": "2026-09-01T12:00:00.000Z"
+        },
+        {
+          "id": 102,
+          "name": "BENCH 102 Course 2",
+          "code": "BENCH102",
+          "role": "Student",
+          "isActive": true,
+          "canAccess": true,
+          "lastAccessed": "2026-09-02T12:00:00.000Z"
+        },
+        {
+          "id": 103,
+          "name": "BENCH 103 Course 3",
+          "code": "BENCH103",
+          "role": "Student",
+          "isActive": true,
+          "canAccess": true,
+          "lastAccessed": "2026-09-03T12:00:00.000Z"
+        },
+        {
+          "id": 104,
+          "name": "BENCH 104 Course 4",
+          "code": "BENCH104",
+          "role": "Student",
+          "isActive": true,
+          "canAccess": true,
+          "lastAccessed": "2026-09-04T12:00:00.000Z"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,310 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": [
+        {
+          "name": "Person 0",
+          "email": "person0@uwaterloo.ca",
+          "role": "Instructor"
+        },
+        {
+          "name": "Person 1",
+          "email": "person1@uwaterloo.ca",
+          "role": "Instructor"
+        },
+        {
+          "name": "Person 2",
+          "email": "person2@uwaterloo.ca",
+          "role": "TA"
+        },
+        {
+          "name": "Person 3",
+          "email": "person3@uwaterloo.ca",
+          "role": "TA"
+        },
+        {
+          "name": "Person 4",
+          "email": "person4@uwaterloo.ca",
+          "role": "TA"
+        },
+        {
+          "name": "Person 5",
+          "email": "person5@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 6",
+          "email": "person6@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 7",
+          "email": "person7@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 8",
+          "email": "person8@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 9",
+          "email": "person9@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 10",
+          "email": "person10@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 11",
+          "email": "person11@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 12",
+          "email": "person12@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 13",
+          "email": "person13@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 14",
+          "email": "person14@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 15",
+          "email": "person15@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 16",
+          "email": "person16@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 17",
+          "email": "person17@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 18",
+          "email": "person18@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 19",
+          "email": "person19@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 20",
+          "email": "person20@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 21",
+          "email": "person21@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 22",
+          "email": "person22@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 23",
+          "email": "person23@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 24",
+          "email": "person24@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 25",
+          "email": "person25@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 26",
+          "email": "person26@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 27",
+          "email": "person27@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 28",
+          "email": "person28@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 29",
+          "email": "person29@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 30",
+          "email": "person30@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 31",
+          "email": "person31@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 32",
+          "email": "person32@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 33",
+          "email": "person33@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 34",
+          "email": "person34@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 35",
+          "email": "person35@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 36",
+          "email": "person36@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 37",
+          "email": "person37@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 38",
+          "email": "person38@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 39",
+          "email": "person39@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 40",
+          "email": "person40@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 41",
+          "email": "person41@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 42",
+          "email": "person42@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 43",
+          "email": "person43@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 44",
+          "email": "person44@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 45",
+          "email": "person45@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 46",
+          "email": "person46@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 47",
+          "email": "person47@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 48",
+          "email": "person48@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 49",
+          "email": "person49@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 50",
+          "email": "person50@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 51",
+          "email": "person51@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 52",
+          "email": "person52@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 53",
+          "email": "person53@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 54",
+          "email": "person54@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 55",
+          "email": "person55@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 56",
+          "email": "person56@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 57",
+          "email": "person57@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 58",
+          "email": "person58@uwaterloo.ca",
+          "role": "Student"
+        },
+        {
+          "name": "Person 59",
+          "email": "person59@uwaterloo.ca",
+          "role": "Student"
+        }
+      ]
+    }
+  ]
+}

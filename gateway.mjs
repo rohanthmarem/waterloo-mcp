@@ -352,6 +352,11 @@ export function createGateway(
   });
   app.requestTimeout = 200000;
   app.headersTimeout = 15000;
+  // Start the worker as soon as the port is open so the first tool call after a
+  // restart does not also pay for process start and API version discovery.
+  app.on("listening", () => {
+    client().catch(() => {});
+  });
   app.on("close", () => {
     upstream?.then((c) => c.close()).catch(() => {});
   });

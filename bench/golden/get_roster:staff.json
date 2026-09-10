@@ -1,0 +1,41 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "total": 5,
+        "returned": 5,
+        "truncated": false,
+        "users": [
+          {
+            "name": "Person 0",
+            "email": "person0@uwaterloo.ca",
+            "role": "Instructor"
+          },
+          {
+            "name": "Person 1",
+            "email": "person1@uwaterloo.ca",
+            "role": "Instructor"
+          },
+          {
+            "name": "Person 2",
+            "email": "person2@uwaterloo.ca",
+            "role": "TA"
+          },
+          {
+            "name": "Person 3",
+            "email": "person3@uwaterloo.ca",
+            "role": "TA"
+          },
+          {
+            "name": "Person 4",
+            "email": "person4@uwaterloo.ca",
+            "role": "TA"
+          }
+        ]
+      }
+    }
+  ]
+}

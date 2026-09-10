@@ -103,6 +103,11 @@ if (subcommand === 'setup') {
         baseUrl: config.baseUrl,
         tokenManager,
         onAuthExpired: () => authRunner.run(),
+        // One student's reads. A single LEARN page load issues more requests
+        // than this allows per second, and 429 with Retry-After is still
+        // honored, so the earlier 3 per second only made every multi-request
+        // tool wait on its own client.
+        rateLimitConfig: { capacity: 20, refillRate: 8 },
       });
 
       // Initialize API client (discover API versions)

@@ -1,0 +1,55 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "assignments": [
+          {
+            "folderId": 10151,
+            "folderName": "Assignment 2",
+            "dueDate": "2026-09-06T12:00:00.000Z",
+            "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10151&grpid=0&ou=101",
+            "attachments": [
+              {
+                "fileId": 10171,
+                "fileName": "spec.pdf",
+                "size": 4000,
+                "kind": "pdf"
+              }
+            ]
+          },
+          {
+            "folderId": 10153,
+            "folderName": "Assignment 4",
+            "dueDate": "2026-09-16T12:00:00.000Z",
+            "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10153&grpid=0&ou=101",
+            "attachments": [
+              {
+                "fileId": 10173,
+                "fileName": "starter.txt",
+                "size": 4000,
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "folderId": 10155,
+            "folderName": "Assignment 6",
+            "dueDate": "2026-09-26T12:00:00.000Z",
+            "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10155&grpid=0&ou=101",
+            "attachments": [
+              {
+                "fileId": 10175,
+                "fileName": "starter.txt",
+                "size": 4000,
+                "kind": "text"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "authenticated": true,
+        "verifiedWith": "LEARN users/whoami"
+      }
+    }
+  ]
+}

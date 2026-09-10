@@ -1,0 +1,13 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "status": "separate_access_required",
+        "url": "https://www.example.com/reading/104",
+        "note": "This is an external service or LEARN action link. Its contents have not been read."
+      }
+    }
+  ]
+}

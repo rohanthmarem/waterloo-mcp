@@ -1,0 +1,744 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "typeFilter": "all",
+        "contentTree": [
+          {
+            "type": "module",
+            "id": 101001,
+            "title": "Course Outline and Syllabus",
+            "description": "Section 102 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101101,
+                "title": "Lecture 101 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101101
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101102,
+                "title": "Lecture 102 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101102 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 1 process assignment probability kernel process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+                "topicId": 101102,
+                "content": {
+                  "markdown": "## Section 101102\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 0](https://learn.uwaterloo.ca/d2l/le/content/101102/viewContent/0/View) **assignment probability kernel lecture**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 1](https://learn.uwaterloo.ca/d2l/le/content/101102/viewContent/1/View) **process assignment probability kernel**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture",
+                  "html": "<h2>Section 101102</h2><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101102/viewContent/0/View\">link 0</a> <strong>assignment probability kernel lecture</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101102/viewContent/1/View\">link 1</a> <strong>process assignment probability kernel</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101103,
+                "title": "Lecture 103 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101103
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101104,
+                "title": "External reading 104",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/104"
+              },
+              {
+                "type": "module",
+                "id": 101011,
+                "title": "Week 11 Module",
+                "description": "Section 112 proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics link 0 semantics proof tensor syntax compiler semantics proof tensor syntax matrix algorithm compiler semantics proof tensor syntax",
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102101,
+                    "title": "Lecture 1101 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102101 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 1 assignment probability kernel lecture assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+                    "topicId": 102101,
+                    "content": {
+                      "markdown": "## Section 102101\n\nkernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability [link 0](https://learn.uwaterloo.ca/d2l/le/content/102101/viewContent/0/View) **probability kernel lecture induction**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 1](https://learn.uwaterloo.ca/d2l/le/content/102101/viewContent/1/View) **assignment probability kernel lecture**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction",
+                      "html": "<h2>Section 102101</h2><p>kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102101/viewContent/0/View\">link 0</a> <strong>probability kernel lecture induction</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102101/viewContent/1/View\">link 1</a> <strong>assignment probability kernel lecture</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul>"
+                    }
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102102,
+                    "title": "Lecture 1102 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102102
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102103,
+                    "title": "Lecture 1103 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102103
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "module",
+            "id": 101002,
+            "title": "Week 2 Module",
+            "description": null,
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101201,
+                "title": "Lecture 201 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101201 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 1 assignment probability kernel lecture assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+                "topicId": 101201,
+                "content": {
+                  "markdown": "## Section 101201\n\nkernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability [link 0](https://learn.uwaterloo.ca/d2l/le/content/101201/viewContent/0/View) **probability kernel lecture induction**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 1](https://learn.uwaterloo.ca/d2l/le/content/101201/viewContent/1/View) **assignment probability kernel lecture**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction",
+                  "html": "<h2>Section 101201</h2><p>kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101201/viewContent/0/View\">link 0</a> <strong>probability kernel lecture induction</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101201/viewContent/1/View\">link 1</a> <strong>assignment probability kernel lecture</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101202,
+                "title": "Lecture 202 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101202
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101203,
+                "title": "Lecture 203 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101203
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101204,
+                "title": "External reading 204",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/204",
+                "content": {
+                  "markdown": "## Section 101204\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 0](https://learn.uwaterloo.ca/d2l/le/content/101204/viewContent/0/View) **entropy process assignment probability**\n\n*   integral entropy process assignment probability kernel\n*   thread integral entropy process assignment probability\n\nentropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral [link 1](https://learn.uwaterloo.ca/d2l/le/content/101204/viewContent/1/View) **integral entropy process assignment**\n\n*   integral entropy process assignment probability kernel\n*   thread integral entropy process assignment probability",
+                  "html": "<h2>Section 101204</h2><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101204/viewContent/0/View\">link 0</a> <strong>entropy process assignment probability</strong></p><ul><li>integral entropy process assignment probability kernel</li><li>thread integral entropy process assignment probability</li></ul><p>entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101204/viewContent/1/View\">link 1</a> <strong>integral entropy process assignment</strong></p><ul><li>integral entropy process assignment probability kernel</li><li>thread integral entropy process assignment probability</li></ul>"
+                }
+              },
+              {
+                "type": "module",
+                "id": 101012,
+                "title": "Week 12 Module",
+                "description": null,
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102201,
+                    "title": "Lecture 1201 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102201
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102202,
+                    "title": "Lecture 1202 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102202
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102203,
+                    "title": "Lecture 1203 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102203 assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 0 process assignment probability kernel entropy process assignment probability kernel lecture integral entropy process assignment probability kernel process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 1 entropy process assignment probability entropy process assignment probability kernel lecture integral entropy process assignment probability kernel",
+                    "topicId": 102203,
+                    "content": {
+                      "markdown": "## Section 102203\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 0](https://learn.uwaterloo.ca/d2l/le/content/102203/viewContent/0/View) **process assignment probability kernel**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 1](https://learn.uwaterloo.ca/d2l/le/content/102203/viewContent/1/View) **entropy process assignment probability**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel",
+                      "html": "<h2>Section 102203</h2><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102203/viewContent/0/View\">link 0</a> <strong>process assignment probability kernel</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102203/viewContent/1/View\">link 1</a> <strong>entropy process assignment probability</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul>"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "module",
+            "id": 101003,
+            "title": "Week 3 Module",
+            "description": "Section 104 process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 0 entropy process assignment probability integral entropy process assignment probability kernel thread integral entropy process assignment probability",
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101301,
+                "title": "Lecture 301 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101301
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101302,
+                "title": "Lecture 302 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101302
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101303,
+                "title": "Lecture 303 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101303 assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 0 process assignment probability kernel entropy process assignment probability kernel lecture integral entropy process assignment probability kernel process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 1 entropy process assignment probability entropy process assignment probability kernel lecture integral entropy process assignment probability kernel",
+                "topicId": 101303,
+                "content": {
+                  "markdown": "## Section 101303\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 0](https://learn.uwaterloo.ca/d2l/le/content/101303/viewContent/0/View) **process assignment probability kernel**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 1](https://learn.uwaterloo.ca/d2l/le/content/101303/viewContent/1/View) **entropy process assignment probability**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel",
+                  "html": "<h2>Section 101303</h2><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101303/viewContent/0/View\">link 0</a> <strong>process assignment probability kernel</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101303/viewContent/1/View\">link 1</a> <strong>entropy process assignment probability</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101304,
+                "title": "External reading 304",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/304"
+              },
+              {
+                "type": "module",
+                "id": 101013,
+                "title": "Week 13 Module",
+                "description": "Section 114 compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm link 0 algorithm compiler semantics proof recursion algorithm compiler semantics proof tensor network recursion algorithm compiler semantics proof",
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102301,
+                    "title": "Lecture 1301 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102301
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102302,
+                    "title": "Lecture 1302 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102302 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 1 process assignment probability kernel process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+                    "topicId": 102302,
+                    "content": {
+                      "markdown": "## Section 102302\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 0](https://learn.uwaterloo.ca/d2l/le/content/102302/viewContent/0/View) **assignment probability kernel lecture**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 1](https://learn.uwaterloo.ca/d2l/le/content/102302/viewContent/1/View) **process assignment probability kernel**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture",
+                      "html": "<h2>Section 102302</h2><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102302/viewContent/0/View\">link 0</a> <strong>assignment probability kernel lecture</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102302/viewContent/1/View\">link 1</a> <strong>process assignment probability kernel</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul>"
+                    }
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102303,
+                    "title": "Lecture 1303 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102303
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "module",
+            "id": 101004,
+            "title": "Week 4 Module",
+            "description": null,
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101401,
+                "title": "Lecture 401 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101401
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101402,
+                "title": "Lecture 402 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101402 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 1 process assignment probability kernel process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+                "topicId": 101402,
+                "content": {
+                  "markdown": "## Section 101402\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 0](https://learn.uwaterloo.ca/d2l/le/content/101402/viewContent/0/View) **assignment probability kernel lecture**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 1](https://learn.uwaterloo.ca/d2l/le/content/101402/viewContent/1/View) **process assignment probability kernel**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture",
+                  "html": "<h2>Section 101402</h2><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101402/viewContent/0/View\">link 0</a> <strong>assignment probability kernel lecture</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101402/viewContent/1/View\">link 1</a> <strong>process assignment probability kernel</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101403,
+                "title": "Lecture 403 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101403
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101404,
+                "title": "External reading 404",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/404"
+              },
+              {
+                "type": "module",
+                "id": 101014,
+                "title": "Week 14 Module",
+                "description": null,
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102401,
+                    "title": "Lecture 1401 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102401 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 1 assignment probability kernel lecture assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+                    "topicId": 102401,
+                    "content": {
+                      "markdown": "## Section 102401\n\nkernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability [link 0](https://learn.uwaterloo.ca/d2l/le/content/102401/viewContent/0/View) **probability kernel lecture induction**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 1](https://learn.uwaterloo.ca/d2l/le/content/102401/viewContent/1/View) **assignment probability kernel lecture**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction",
+                      "html": "<h2>Section 102401</h2><p>kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102401/viewContent/0/View\">link 0</a> <strong>probability kernel lecture induction</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102401/viewContent/1/View\">link 1</a> <strong>assignment probability kernel lecture</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul>"
+                    }
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102402,
+                    "title": "Lecture 1402 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102402
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102403,
+                    "title": "Lecture 1403 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102403
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "module",
+            "id": 101005,
+            "title": "Week 5 Module",
+            "description": "Section 106 integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread link 0 thread integral entropy process gradient thread integral entropy process assignment matrix gradient thread integral entropy process",
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101501,
+                "title": "Lecture 501 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101501 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 1 assignment probability kernel lecture assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+                "topicId": 101501,
+                "content": {
+                  "markdown": "## Section 101501\n\nkernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability [link 0](https://learn.uwaterloo.ca/d2l/le/content/101501/viewContent/0/View) **probability kernel lecture induction**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 1](https://learn.uwaterloo.ca/d2l/le/content/101501/viewContent/1/View) **assignment probability kernel lecture**\n\n*   assignment probability kernel lecture induction complexity\n*   process assignment probability kernel lecture induction",
+                  "html": "<h2>Section 101501</h2><p>kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101501/viewContent/0/View\">link 0</a> <strong>probability kernel lecture induction</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101501/viewContent/1/View\">link 1</a> <strong>assignment probability kernel lecture</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101502,
+                "title": "Lecture 502 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101502
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101503,
+                "title": "Lecture 503 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101503
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101504,
+                "title": "External reading 504",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/504",
+                "content": {
+                  "markdown": "## Section 101504\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 0](https://learn.uwaterloo.ca/d2l/le/content/101504/viewContent/0/View) **entropy process assignment probability**\n\n*   integral entropy process assignment probability kernel\n*   thread integral entropy process assignment probability\n\nentropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral [link 1](https://learn.uwaterloo.ca/d2l/le/content/101504/viewContent/1/View) **integral entropy process assignment**\n\n*   integral entropy process assignment probability kernel\n*   thread integral entropy process assignment probability",
+                  "html": "<h2>Section 101504</h2><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101504/viewContent/0/View\">link 0</a> <strong>entropy process assignment probability</strong></p><ul><li>integral entropy process assignment probability kernel</li><li>thread integral entropy process assignment probability</li></ul><p>entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101504/viewContent/1/View\">link 1</a> <strong>integral entropy process assignment</strong></p><ul><li>integral entropy process assignment probability kernel</li><li>thread integral entropy process assignment probability</li></ul>"
+                }
+              },
+              {
+                "type": "module",
+                "id": 101015,
+                "title": "Week 15 Module",
+                "description": "Section 116 recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network link 0 network recursion algorithm compiler complexity network recursion algorithm compiler semantics induction complexity network recursion algorithm compiler",
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102501,
+                    "title": "Lecture 1501 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102501
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102502,
+                    "title": "Lecture 1502 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102502
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102503,
+                    "title": "Lecture 1503 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102503 assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 0 process assignment probability kernel entropy process assignment probability kernel lecture integral entropy process assignment probability kernel process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 1 entropy process assignment probability entropy process assignment probability kernel lecture integral entropy process assignment probability kernel",
+                    "topicId": 102503,
+                    "content": {
+                      "markdown": "## Section 102503\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 0](https://learn.uwaterloo.ca/d2l/le/content/102503/viewContent/0/View) **process assignment probability kernel**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 1](https://learn.uwaterloo.ca/d2l/le/content/102503/viewContent/1/View) **entropy process assignment probability**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel",
+                      "html": "<h2>Section 102503</h2><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102503/viewContent/0/View\">link 0</a> <strong>process assignment probability kernel</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102503/viewContent/1/View\">link 1</a> <strong>entropy process assignment probability</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul>"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "module",
+            "id": 101006,
+            "title": "Week 6 Module",
+            "description": null,
+            "dueDate": null,
+            "isHidden": false,
+            "isLocked": false,
+            "children": [
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101601,
+                "title": "Lecture 601 notes.html",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101601
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101602,
+                "title": "Lecture 602 notes.txt",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "",
+                "topicId": 101602
+              },
+              {
+                "type": "topic",
+                "topicType": "file",
+                "id": 101603,
+                "title": "Lecture 603 notes.pdf",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "description": "Section 101603 assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 0 process assignment probability kernel entropy process assignment probability kernel lecture integral entropy process assignment probability kernel process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 1 entropy process assignment probability entropy process assignment probability kernel lecture integral entropy process assignment probability kernel",
+                "topicId": 101603,
+                "content": {
+                  "markdown": "## Section 101603\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 0](https://learn.uwaterloo.ca/d2l/le/content/101603/viewContent/0/View) **process assignment probability kernel**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel\n\nprocess assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy [link 1](https://learn.uwaterloo.ca/d2l/le/content/101603/viewContent/1/View) **entropy process assignment probability**\n\n*   entropy process assignment probability kernel lecture\n*   integral entropy process assignment probability kernel",
+                  "html": "<h2>Section 101603</h2><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101603/viewContent/0/View\">link 0</a> <strong>process assignment probability kernel</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul><p>process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy <a href=\"https://learn.uwaterloo.ca/d2l/le/content/101603/viewContent/1/View\">link 1</a> <strong>entropy process assignment probability</strong></p><ul><li>entropy process assignment probability kernel lecture</li><li>integral entropy process assignment probability kernel</li></ul>"
+                }
+              },
+              {
+                "type": "topic",
+                "topicType": "link",
+                "id": 101604,
+                "title": "External reading 604",
+                "isHidden": false,
+                "isLocked": false,
+                "dueDate": null,
+                "isCompleted": false,
+                "completedDate": null,
+                "url": "https://www.example.com/reading/604"
+              },
+              {
+                "type": "module",
+                "id": 101016,
+                "title": "Week 16 Module",
+                "description": null,
+                "dueDate": null,
+                "isHidden": false,
+                "isLocked": false,
+                "children": [
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102601,
+                    "title": "Lecture 1601 notes.txt",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102601
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102602,
+                    "title": "Lecture 1602 notes.pdf",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "Section 102602 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 1 process assignment probability kernel process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+                    "topicId": 102602,
+                    "content": {
+                      "markdown": "## Section 102602\n\nprobability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment [link 0](https://learn.uwaterloo.ca/d2l/le/content/102602/viewContent/0/View) **assignment probability kernel lecture**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture\n\nassignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process [link 1](https://learn.uwaterloo.ca/d2l/le/content/102602/viewContent/1/View) **process assignment probability kernel**\n\n*   process assignment probability kernel lecture induction\n*   entropy process assignment probability kernel lecture",
+                      "html": "<h2>Section 102602</h2><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102602/viewContent/0/View\">link 0</a> <strong>assignment probability kernel lecture</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul><p>assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process <a href=\"https://learn.uwaterloo.ca/d2l/le/content/102602/viewContent/1/View\">link 1</a> <strong>process assignment probability kernel</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul>"
+                    }
+                  },
+                  {
+                    "type": "topic",
+                    "topicType": "file",
+                    "id": 102603,
+                    "title": "Lecture 1603 notes.html",
+                    "isHidden": false,
+                    "isLocked": false,
+                    "dueDate": null,
+                    "isCompleted": false,
+                    "completedDate": null,
+                    "description": "",
+                    "topicId": 102603
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "topicCount": 42,
+        "moduleCount": 12
+      }
+    }
+  ]
+}

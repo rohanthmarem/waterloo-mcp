@@ -10,6 +10,7 @@ import { GetCourseContentSchema } from "./schemas.js";
 import { toolResponse, sanitizeError } from "./tool-helpers.js";
 import { convertHtmlToMarkdown } from "../utils/html-converter.js";
 import { log } from "../utils/logger.js";
+import { mapLimit } from "../utils/concurrency.js";
 
 // D2L Content API response type
 interface ContentObject {
@@ -75,8 +76,15 @@ function matchesTypeFilter(item: ContentObject, filter: string): boolean {
  */
 const MAX_CONTENT_DEPTH = 12;
 
+/** Sibling modules may read their children together, up to this many at a time. */
+const MODULE_CONCURRENCY = 6;
+
 /**
  * Recursively build the content tree with progress tracking.
+ *
+ * Sibling modules are read together: a course with six top-level modules used
+ * to make six round trips one after another at every level. Result order
+ * follows the server's order regardless of which read finishes first.
  */
 async function buildContentTree(
   apiClient: D2LApiClient,
@@ -87,10 +95,9 @@ async function buildContentTree(
   maxDepth?: number,
   currentDepth: number = 0,
 ): Promise<any[]> {
-  const tree = [];
   const depthLimit = Math.min(maxDepth ?? MAX_CONTENT_DEPTH, MAX_CONTENT_DEPTH);
 
-  for (const item of modules) {
+  const entries = await mapLimit(modules, MODULE_CONCURRENCY, async (item) => {
     if (item.Type === 0) {
       // Module: fetch children recursively (unless the depth limit is reached)
       let processedChildren: any[] = [];
@@ -117,7 +124,7 @@ async function buildContentTree(
 
       // Only include module if it has matching children (or filter is 'all')
       if (typeFilter === 'all' || processedChildren.length > 0) {
-        tree.push({
+        return {
           type: 'module',
           id: item.Id,
           title: item.Title,
@@ -127,15 +134,18 @@ async function buildContentTree(
           isLocked: item.IsLocked,
           children: processedChildren,
           ...(childrenReadError ? {childrenReadError} : {}),
-        });
+        };
       }
-    } else if (item.Type === 1) {
+      return null;
+    }
+
+    if (item.Type === 1) {
       // Topic — process based on TopicType
       const topicType = TOPIC_TYPE_MAP[item.TopicType ?? 0] ?? 'other';
 
       // Apply type filter
       if (typeFilter !== 'all' && !matchesTypeFilter(item, typeFilter)) {
-        continue;
+        return null;
       }
 
       const topicProgress = progressMap.get(item.Id);
@@ -167,11 +177,13 @@ async function buildContentTree(
         topic.content = convertHtmlToMarkdown(item.Description.Html);
       }
 
-      tree.push(topic);
+      return topic;
     }
-  }
 
-  return tree;
+    return null;
+  });
+
+  return entries.filter((entry) => entry !== null);
 }
 
 /**

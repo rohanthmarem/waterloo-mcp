@@ -19,7 +19,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "audit:package": "node scripts/audit-package.mjs",
-    "test:rooms:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/libcal-browser.test.mjs"
+    "test:rooms:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/libcal-browser.test.mjs",
+    "bench": "node bench/run.mjs",
+    "bench:compare": "node bench/compare.mjs",
+    "bench:live": "node bench/live.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

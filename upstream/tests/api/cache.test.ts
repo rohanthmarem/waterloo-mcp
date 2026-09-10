@@ -126,3 +126,36 @@ describe("TTLCache", () => {
     expect(cache.size).toBe(0);
   });
 });
+
+describe("TTLCache entry ceiling", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("evicts the oldest entry once the ceiling is reached", () => {
+    const cache = new TTLCache<string>(3);
+    cache.set("a", "1", 60_000);
+    cache.set("b", "2", 60_000);
+    cache.set("c", "3", 60_000);
+    cache.set("d", "4", 60_000);
+    expect(cache.size).toBe(3);
+    expect(cache.has("a")).toBe(false);
+    expect(cache.get("d")).toBe("4");
+    cache.clear();
+  });
+
+  it("does not count an overwrite as a new entry", () => {
+    const cache = new TTLCache<string>(2);
+    cache.set("a", "1", 60_000);
+    cache.set("b", "2", 60_000);
+    cache.set("a", "1b", 60_000);
+    expect(cache.size).toBe(2);
+    expect(cache.get("a")).toBe("1b");
+    expect(cache.get("b")).toBe("2");
+    cache.clear();
+  });
+});

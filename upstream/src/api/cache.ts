@@ -12,14 +12,28 @@ interface CacheEntry<T> {
   timerId: NodeJS.Timeout;
 }
 
+/**
+ * Entry ceiling. Course content and enrollment reads live for up to an hour,
+ * and a long session across many courses would otherwise keep every response
+ * body resident until its own timer fired. Past the ceiling the oldest entry
+ * goes first; a miss just refetches.
+ */
+const DEFAULT_MAX_ENTRIES = 2000;
+
 export class TTLCache<T = unknown> {
   private cache = new Map<string, CacheEntry<T>>();
+
+  constructor(private readonly maxEntries: number = DEFAULT_MAX_ENTRIES) {}
 
   set(key: string, value: T, ttlMs: number): void {
     // Clear existing timer if key exists
     const existing = this.cache.get(key);
     if (existing) {
       clearTimeout(existing.timerId);
+      this.cache.delete(key);
+    } else if (this.cache.size >= this.maxEntries) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) this.delete(oldest);
     }
 
     // Set new timer to auto-delete after TTL

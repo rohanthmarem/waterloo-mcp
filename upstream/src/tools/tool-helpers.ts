@@ -14,11 +14,13 @@ import { AuthError, SessionStoreError } from "../utils/errors.js";
  * Wrap data as MCP-compatible tool result
  */
 export function toolResponse(data: unknown): CallToolResult {
+  // Compact JSON: the model reads the same structure, and indentation was a
+  // quarter to a third of every response body it had to pay for.
   return {
     content: [
       {
         type: "text",
-        text: JSON.stringify(data, null, 2),
+        text: JSON.stringify(data),
       },
     ],
   };

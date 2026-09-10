@@ -64,7 +64,9 @@ Downloads, transcripts, model files, and approval records persist until you remo
 
 ## Performance
 
-The gateway shares a single Brightspace worker across clients. Expensive page, link, outline, and Odyssey reads share in-progress work and use a 30-second cache. That cache holds at most 32 entries, each no larger than 2 MiB, and permits four different expensive reads at once. Errors and approved writes are not cached there. The underlying Brightspace client also caches selected reads.
+The gateway shares a single Brightspace worker across clients and starts it as soon as the port opens. Expensive page, link, outline, and Odyssey reads share in-progress work and use a 30-second cache. That cache holds at most 32 entries, each no larger than 2 MiB, and permits four different expensive reads at once. Errors and approved writes are not cached there. The underlying Brightspace client also caches selected reads, holds at most 2000 cached responses, and sends at most 8 LEARN requests per second with a burst of 20, honoring any 429 Retry-After.
+
+Page reads (`get_course_home`, `read_course_link`, `get_odyssey_schedule`) share one headless Chromium inside the worker. Each read gets a fresh isolated context that is closed when the read finishes; the browser process itself closes after 60 seconds without use. Playwright is loaded on first use, so an API-only session keeps about 70 MiB less resident memory in each process. Study-room checkout still launches its own browser for each approved booking. See [performance](performance.md) for measurements and how to rerun them.
 
 A changed course page may take up to the relevant cache duration to appear. Restarting the service clears in-memory caches. Pagination prevents long texts from overwhelming a client. Transcription streams to temporary disk, limits input size and time windows, and runs one job at a time. Downloading the speech model on first use takes extra time and storage.
 
