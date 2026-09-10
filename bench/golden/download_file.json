@@ -1,0 +1,15 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "success": true,
+        "fileSize": 6278,
+        "mimeType": "application/pdf",
+        "originalFilename": "lecture-102.pdf",
+        "message": "File downloaded successfully to /var/folders/w8/mhwn50kj72v_twknvzc03nrw0000gn/T/bench-state-MS2CTh/downloads/lecture-102.pdf"
+      }
+    }
+  ]
+}

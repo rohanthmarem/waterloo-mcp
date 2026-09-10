@@ -1,0 +1,133 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "grades": [
+          {
+            "name": "Grade item 1",
+            "displayGrade": "80 %",
+            "pointsNumerator": 80,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": "Section 101 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+            "lastModified": "2026-09-01T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 2",
+            "displayGrade": "81 %",
+            "pointsNumerator": 81,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-02T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 3",
+            "displayGrade": "82 %",
+            "pointsNumerator": 82,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-03T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 4",
+            "displayGrade": "83 %",
+            "pointsNumerator": 83,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": "Section 104 process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy link 0 entropy process assignment probability integral entropy process assignment probability kernel thread integral entropy process assignment probability",
+            "lastModified": "2026-09-04T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 5",
+            "displayGrade": "84 %",
+            "pointsNumerator": 84,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-05T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 6",
+            "displayGrade": "85 %",
+            "pointsNumerator": 85,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-06T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 7",
+            "displayGrade": "86 %",
+            "pointsNumerator": 86,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": "Section 107 thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient link 0 gradient thread integral entropy matrix gradient thread integral entropy process syntax matrix gradient thread integral entropy",
+            "lastModified": "2026-09-07T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 8",
+            "displayGrade": "87 %",
+            "pointsNumerator": 87,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-08T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 9",
+            "displayGrade": "88 %",
+            "pointsNumerator": 88,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-09T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 10",
+            "displayGrade": "89 %",
+            "pointsNumerator": 89,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": "Section 110 syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor link 0 tensor syntax matrix gradient proof tensor syntax matrix gradient thread semantics proof tensor syntax matrix gradient",
+            "lastModified": "2026-09-10T12:00:00.000Z"
+          },
+          {
+            "name": "Grade item 11",
+            "displayGrade": "90 %",
+            "pointsNumerator": 90,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-11T12:00:00.000Z"
+          },
+          {
+            "name": "Final Calculated Grade",
+            "displayGrade": "91 %",
+            "pointsNumerator": 91,
+            "pointsDenominator": 100,
+            "weightedNumerator": 8,
+            "weightedDenominator": 10,
+            "comments": null,
+            "lastModified": "2026-09-12T12:00:00.000Z"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -7,3 +7,7 @@ private
 *.log
 *.zip
 tests
+upstream/tests
+bench
+docs
+.context

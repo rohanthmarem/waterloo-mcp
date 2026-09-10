@@ -268,14 +268,16 @@ export class RoomCatalog {
   async rooms() {
     if (this.cached && this.expires > Date.now()) return this.cached;
     this.pending ??= (async () => {
-      const rooms = [];
-      for (const library of Object.keys(LIBRARIES))
-        rooms.push(
-          ...parseRooms(
-            await this.request("/reserve/spaces/" + LIBRARIES[library].slug),
-            library,
-          ),
-        );
+      // The three library pages are independent public reads; fetch them together.
+      const pages = await Promise.all(
+        Object.keys(LIBRARIES).map(async (library) => [
+          library,
+          await this.request("/reserve/spaces/" + LIBRARIES[library].slug),
+        ]),
+      );
+      const rooms = pages.flatMap(([library, html]) =>
+        parseRooms(html, library),
+      );
       this.cached = rooms;
       this.expires = Date.now() + 300000;
       return rooms;
@@ -320,10 +322,18 @@ export class RoomCatalog {
         (!args.minCapacity || r.capacity >= args.minCapacity),
     );
     if (args.roomId && !rooms.length) fail("ROOM_NOT_FOUND");
-    const grids = new Map();
+    // One availability grid per library, read together rather than in turn.
+    const byLibrary = new Map();
     for (const room of rooms)
-      if (!grids.has(room.lid))
-        grids.set(room.lid, await this.grid(room, args.date));
+      if (!byLibrary.has(room.lid)) byLibrary.set(room.lid, room);
+    const grids = new Map(
+      await Promise.all(
+        [...byLibrary].map(async ([lid, room]) => [
+          lid,
+          await this.grid(room, args.date),
+        ]),
+      ),
+    );
     return {
       timezone: ROOM_TIMEZONE,
       date: args.date,

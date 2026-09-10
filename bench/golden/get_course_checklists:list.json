@@ -1,0 +1,31 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "Objects": [
+          {
+            "ChecklistId": 1011,
+            "Name": "Checklist 1",
+            "Description": {
+              "Text": "Section 1 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+              "Html": "<h2>Section 1</h2><p>kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability <a href=\"https://learn.uwaterloo.ca/d2l/le/content/1/viewContent/0/View\">link 0</a> <strong>probability kernel lecture induction</strong></p><ul><li>assignment probability kernel lecture induction complexity</li><li>process assignment probability kernel lecture induction</li></ul>"
+            },
+            "IsVisible": true
+          },
+          {
+            "ChecklistId": 1012,
+            "Name": "Checklist 2",
+            "Description": {
+              "Text": "Section 2 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+              "Html": "<h2>Section 2</h2><p>probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment <a href=\"https://learn.uwaterloo.ca/d2l/le/content/2/viewContent/0/View\">link 0</a> <strong>assignment probability kernel lecture</strong></p><ul><li>process assignment probability kernel lecture induction</li><li>entropy process assignment probability kernel lecture</li></ul>"
+            },
+            "IsVisible": true
+          }
+        ],
+        "Next": null
+      }
+    }
+  ]
+}

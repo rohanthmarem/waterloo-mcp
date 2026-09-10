@@ -1,4 +1,3 @@
-import { chromium } from "playwright";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { decrypt } from "../upstream/build/auth/encrypted-store.js";
@@ -61,7 +60,11 @@ export class LibCalBrowser {
   constructor(
     config,
     catalog,
-    { launch = () => chromium.launch({ headless: true }) } = {},
+    {
+      // Loaded on first use: playwright alone costs about 70 MiB of resident memory.
+      launch = async () =>
+        (await import("playwright")).chromium.launch({ headless: true }),
+    } = {},
   ) {
     this.launch = launch;
     this.config = config;

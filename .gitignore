@@ -12,3 +12,6 @@ private/
 *.zip
 coverage/
 .DS_Store
+
+# Benchmark run artifacts (real-account timings include course IDs); regenerate with npm run bench
+bench/results/

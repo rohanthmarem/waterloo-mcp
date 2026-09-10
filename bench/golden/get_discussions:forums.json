@@ -1,0 +1,140 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "forumCount": 3,
+        "forums": [
+          {
+            "forumId": 1010,
+            "name": "Forum 1",
+            "description": "Section 101 kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability link 0 probability kernel lecture induction assignment probability kernel lecture induction complexity process assignment probability kernel lecture induction",
+            "isLocked": false,
+            "isHidden": false,
+            "topics": [
+              {
+                "topicId": 10100,
+                "forumId": 1010,
+                "name": "Topic 1",
+                "description": "Section 1010 syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor link 0 tensor syntax matrix gradient proof tensor syntax matrix gradient thread semantics proof tensor syntax matrix gradient",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10101,
+                "forumId": 1010,
+                "name": "Topic 2",
+                "description": "Section 1011 tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof link 0 proof tensor syntax matrix semantics proof tensor syntax matrix gradient compiler semantics proof tensor syntax matrix",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10102,
+                "forumId": 1010,
+                "name": "Topic 3",
+                "description": "Section 1012 proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics link 0 semantics proof tensor syntax compiler semantics proof tensor syntax matrix algorithm compiler semantics proof tensor syntax",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              }
+            ]
+          },
+          {
+            "forumId": 1011,
+            "name": "Forum 2",
+            "description": "Section 102 probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment link 0 assignment probability kernel lecture process assignment probability kernel lecture induction entropy process assignment probability kernel lecture",
+            "isLocked": false,
+            "isHidden": false,
+            "topics": [
+              {
+                "topicId": 10110,
+                "forumId": 1011,
+                "name": "Topic 1",
+                "description": "Section 1011 tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof link 0 proof tensor syntax matrix semantics proof tensor syntax matrix gradient compiler semantics proof tensor syntax matrix",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10111,
+                "forumId": 1011,
+                "name": "Topic 2",
+                "description": "Section 1012 proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics link 0 semantics proof tensor syntax compiler semantics proof tensor syntax matrix algorithm compiler semantics proof tensor syntax",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10112,
+                "forumId": 1011,
+                "name": "Topic 3",
+                "description": "Section 1013 semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler link 0 compiler semantics proof tensor algorithm compiler semantics proof tensor syntax recursion algorithm compiler semantics proof tensor",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              }
+            ]
+          },
+          {
+            "forumId": 1012,
+            "name": "Forum 3",
+            "description": "Section 103 assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process link 0 process assignment probability kernel entropy process assignment probability kernel lecture integral entropy process assignment probability kernel",
+            "isLocked": false,
+            "isHidden": false,
+            "topics": [
+              {
+                "topicId": 10120,
+                "forumId": 1012,
+                "name": "Topic 1",
+                "description": "Section 1012 proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics link 0 semantics proof tensor syntax compiler semantics proof tensor syntax matrix algorithm compiler semantics proof tensor syntax",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10121,
+                "forumId": 1012,
+                "name": "Topic 2",
+                "description": "Section 1013 semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler link 0 compiler semantics proof tensor algorithm compiler semantics proof tensor syntax recursion algorithm compiler semantics proof tensor",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              },
+              {
+                "topicId": 10122,
+                "forumId": 1012,
+                "name": "Topic 3",
+                "description": "Section 1014 compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm compiler semantics proof tensor syntax matrix gradient thread integral entropy process assignment probability kernel lecture induction complexity network recursion algorithm link 0 algorithm compiler semantics proof recursion algorithm compiler semantics proof tensor network recursion algorithm compiler semantics proof",
+                "dueDate": null,
+                "isLocked": false,
+                "isHidden": false,
+                "mustPostToParticipate": false,
+                "scoreOutOf": null
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

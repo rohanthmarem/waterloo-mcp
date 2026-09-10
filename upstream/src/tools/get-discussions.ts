@@ -10,6 +10,10 @@ import { GetDiscussionsSchema } from "./schemas.js";
 import { toolResponse, sanitizeError, errorResponse } from "./tool-helpers.js";
 import { convertHtmlToMarkdown } from "../utils/html-converter.js";
 import { log } from "../utils/logger.js";
+import { mapLimit } from "../utils/concurrency.js";
+
+/** Independent per-forum and per-topic reads may overlap up to this many at a time. */
+const DISCUSSION_CONCURRENCY = 6;
 
 // D2L Discussion API response types
 interface D2LForum {
@@ -119,9 +123,8 @@ async function getForumsOverview(
     ttl: DEFAULT_CACHE_TTLS.courseContent,
   });
 
-  const result = [];
-
-  for (const forum of forums) {
+  // Every forum's topic list is an independent read, so they overlap.
+  const result = await mapLimit(forums, DISCUSSION_CONCURRENCY, async (forum) => {
     // Fetch topics for each forum
     let topics: D2LTopic[] = [];
     let topicsReadError: string | undefined;
@@ -142,7 +145,7 @@ async function getForumsOverview(
       }
     }
 
-    result.push({
+    return {
       forumId: forum.ForumId,
       name: forum.Name,
       description: forum.Description?.Text ?? null,
@@ -160,8 +163,8 @@ async function getForumsOverview(
         mustPostToParticipate: t.MustPostToParticipate,
         scoreOutOf: t.ScoreOutOf,
       })),
-    });
-  }
+    };
+  });
 
   log(
     "INFO",
@@ -201,9 +204,8 @@ async function getForumDetail(
     ttl: DEFAULT_CACHE_TTLS.courseContent,
   });
 
-  // Fetch posts for each topic
-  const topicsWithPosts = [];
-  for (const topic of topics) {
+  // Fetch posts for each topic; the reads are independent and overlap.
+  const topicsWithPosts = await mapLimit(topics, DISCUSSION_CONCURRENCY, async (topic) => {
     let posts: D2LPost[] = [];
     let postsReadError: string | undefined;
     try {
@@ -223,7 +225,7 @@ async function getForumDetail(
       }
     }
 
-    topicsWithPosts.push({
+    return {
       topicId: topic.TopicId,
       name: topic.Name,
       description: topic.Description?.Html
@@ -236,8 +238,8 @@ async function getForumDetail(
       ...(postsReadError ? { postsReadError } : {}),
       postCount: posts.length,
       posts: formatPosts(posts),
-    });
-  }
+    };
+  });
 
   log(
     "INFO",

@@ -1,4 +1,3 @@
-import { request } from "playwright";
 import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
@@ -26,7 +25,11 @@ const AAD = "waterloo-piazza-session:v1";
 export class PiazzaSession {
   constructor(
     config,
-    { createContext = (options) => request.newContext(options) } = {},
+    {
+      // Loaded on first use: playwright alone costs about 70 MiB of resident memory.
+      createContext = async (options) =>
+        (await import("playwright")).request.newContext(options),
+    } = {},
   ) {
     this.config = config;
     this.createContext = createContext;

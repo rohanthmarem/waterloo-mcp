@@ -120,7 +120,7 @@ Open `https://YOUR-VM.exe.xyz/setup/piazza` as the owner. Enter your Piazza logi
 
 When an action returns `APPROVAL_REQUIRED`, open its approval URL yourself. Review the tool and exact arguments. After approval, the same agent retries those arguments with `authorizationId`. Approval lasts 15 minutes and can be used once.
 
-Read [error codes](docs/errors.md), [operations and recovery](docs/operations.md), [security](SECURITY.md), and [verification results](docs/verification.md).
+Read [error codes](docs/errors.md), [operations and recovery](docs/operations.md), [security](SECURITY.md), [verification results](docs/verification.md), and [performance measurements](docs/performance.md).
 
 ## Project layout
 
@@ -135,6 +135,7 @@ scripts/             Setup, login, client tokens, deploy, diagnostics
 upstream/            Vendored MIT Brightspace client plus Waterloo readers
 renew.mjs            Saved-session and optional authenticator renewal
 tests/               Access, approval, error, cache and setup tests
+bench/               Offline performance suite against a fake LEARN; see docs/performance.md
 private/             Your local secrets and state; never shared
 ```
 

@@ -1,0 +1,58 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": {
+        "courseId": 101,
+        "candidates": [
+          {
+            "topicId": 101101,
+            "title": "Lecture 101 notes.txt",
+            "type": "file",
+            "url": null
+          },
+          {
+            "topicId": 101102,
+            "title": "Lecture 102 notes.pdf",
+            "type": "file",
+            "url": null
+          },
+          {
+            "topicId": 101103,
+            "title": "Lecture 103 notes.html",
+            "type": "file",
+            "url": null
+          },
+          {
+            "topicId": 101104,
+            "title": "External reading 104",
+            "type": "link",
+            "url": "https://www.example.com/reading/104"
+          },
+          {
+            "topicId": 102101,
+            "title": "Lecture 1101 notes.pdf",
+            "type": "file",
+            "url": null
+          },
+          {
+            "topicId": 102102,
+            "title": "Lecture 1102 notes.html",
+            "type": "file",
+            "url": null
+          },
+          {
+            "topicId": 102103,
+            "title": "Lecture 1103 notes.txt",
+            "type": "file",
+            "url": null
+          }
+        ],
+        "warnings": [],
+        "status": "select_outline_topic",
+        "note": "Multiple outline or syllabus sections found. Call again with a candidate topicId to read a section."
+      }
+    }
+  ]
+}

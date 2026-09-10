@@ -12,6 +12,7 @@ import { convertHtmlToMarkdown } from "../utils/html-converter.js";
 import { log } from "../utils/logger.js";
 import { applyCourseFilter } from "../utils/course-filter.js";
 import { assignmentUrl, gradebookUrl, quizUrl } from "../utils/deep-links.js";
+import { mapLimit } from "../utils/concurrency.js";
 import type { AppConfig } from "../types/index.js";
 
 // D2L Dropbox API types
@@ -149,6 +150,49 @@ interface GradeObject {
  */
 const STUDENT_SCORED = new Set([1, 2, 3, 4]);
 
+/** Independent reads may overlap up to this many at a time per course. */
+const FOLDER_CONCURRENCY = 6;
+const QUIZ_CONCURRENCY = 6;
+
+async function fetchSubmissions(
+  apiClient: D2LApiClient,
+  courseId: number,
+  folderId: number
+): Promise<DropboxSubmission[]> {
+  try {
+    const submissionsRaw = await apiClient.get<{ Objects: DropboxSubmission[] } | DropboxSubmission[]>(
+      apiClient.le(courseId, `/dropbox/folders/${folderId}/submissions/mysubmissions/`),
+      { ttl: DEFAULT_CACHE_TTLS.assignments }
+    );
+    return Array.isArray(submissionsRaw) ? submissionsRaw : (submissionsRaw as any).Objects ?? [];
+  } catch (error: any) {
+    // 404 means no submissions yet - that's fine
+    if (error?.status !== 404) {
+      log("DEBUG", `Failed to fetch submissions for folder ${folderId}`, error);
+    }
+    return [];
+  }
+}
+
+async function fetchFeedback(
+  apiClient: D2LApiClient,
+  courseId: number,
+  folderId: number
+): Promise<DropboxFeedback | null> {
+  try {
+    return await apiClient.get<DropboxFeedback>(
+      apiClient.le(courseId, `/dropbox/folders/${folderId}/feedback/myFeedback/`),
+      { ttl: DEFAULT_CACHE_TTLS.assignments }
+    );
+  } catch (error: any) {
+    // 404/403 means no feedback available (or no access) - that's fine
+    if (error?.status !== 404 && error?.status !== 403) {
+      log("DEBUG", `Failed to fetch feedback for folder ${folderId}`, error);
+    }
+    return null;
+  }
+}
+
 /**
  * Fetch assignments (dropbox + quizzes) for a single course
  *
@@ -185,41 +229,18 @@ export async function fetchCourseAssignments(
     const dropboxRaw = dropboxResult.value;
     const folders: DropboxFolder[] = Array.isArray(dropboxRaw) ? dropboxRaw : (dropboxRaw as any).Objects ?? [];
 
-    for (const folder of folders) {
-      // Skip hidden folders
-      if (folder.IsHidden) continue;
-
-      // Fetch submissions for this folder
-      let submissions: DropboxSubmission[] = [];
-      try {
-        const submissionsRaw = await apiClient.get<{ Objects: DropboxSubmission[] } | DropboxSubmission[]>(
-          apiClient.le(courseId, `/dropbox/folders/${folder.Id}/submissions/mysubmissions/`),
-          { ttl: DEFAULT_CACHE_TTLS.assignments }
-        );
-        submissions = Array.isArray(submissionsRaw) ? submissionsRaw : (submissionsRaw as any).Objects ?? [];
-      } catch (error: any) {
-        // 404 means no submissions yet - that's fine
-        if (error?.status !== 404) {
-          log("DEBUG", `Failed to fetch submissions for folder ${folder.Id}`, error);
-        }
-      }
-
-      // Fetch feedback independently of submissions
-      let feedback: DropboxFeedback | null = null;
-      try {
-        feedback = await apiClient.get<DropboxFeedback>(
-          apiClient.le(courseId, `/dropbox/folders/${folder.Id}/feedback/myFeedback/`),
-          { ttl: DEFAULT_CACHE_TTLS.assignments }
-        );
-      } catch (error: any) {
-        // 404/403 means no feedback available (or no access) - that's fine
-        if (error?.status !== 404 && error?.status !== 403) {
-          log("DEBUG", `Failed to fetch feedback for folder ${folder.Id}`, error);
-        }
-      }
+    // Submissions and feedback are independent reads, within a folder and
+    // across folders, so they overlap instead of queueing two round trips per
+    // folder. Order is preserved; hidden folders are skipped as before.
+    const visible = folders.filter((folder) => !folder.IsHidden);
+    const built = await mapLimit(visible, FOLDER_CONCURRENCY, async (folder) => {
+      const [submissions, feedback] = await Promise.all([
+        fetchSubmissions(apiClient, courseId, folder.Id),
+        fetchFeedback(apiClient, courseId, folder.Id),
+      ]);
 
       // Build assignment object
-      const assignment = {
+      return {
         type: "assignment",
         id: folder.Id,
         name: folder.Name,
@@ -261,9 +282,8 @@ export async function fetchCourseAssignments(
             }
           : null,
       };
-
-      assignments.push(assignment);
-    }
+    });
+    assignments.push(...built);
   } else {
     // Log dropbox fetch failure but don't throw
     log("DEBUG", `Failed to fetch dropbox folders for course ${courseId}`, dropboxResult.reason);
@@ -277,38 +297,51 @@ export async function fetchCourseAssignments(
       ? quizResponse
       : (quizResponse as any)?.Objects ?? [];
 
-    // Students on this tenant get 403 from /quizzes/{id}/attempts/. Once the
-    // first quiz of a course proves that, the remaining quizzes are not asked:
-    // the answer would be the same 403, at one wasted request each.
+    // Skip inactive quizzes
+    const activeQuizzes = quizzes.filter((quiz) => quiz.IsActive);
+
+    // Students on this tenant get 403 from /quizzes/{id}/attempts/. The first
+    // quiz is asked alone; once it proves that, the remaining quizzes are not
+    // asked: the answer would be the same 403, at one wasted request each.
+    // Otherwise the rest are read together.
     let attemptsForbidden = false;
-
-    for (const quiz of quizzes) {
-      // Skip inactive quizzes
-      if (!quiz.IsActive) continue;
-
-      // Fetch quiz attempts. null means "not measured", which is different
-      // from an empty list, and the output says which one it was.
-      let attempts: QuizAttemptData[] | null = null;
-      if (!attemptsForbidden) {
-        try {
-          const attemptsRaw = await apiClient.get<{ Objects: QuizAttemptData[] } | QuizAttemptData[]>(
-            apiClient.le(courseId, `/quizzes/${quiz.QuizId}/attempts/`),
-            { ttl: DEFAULT_CACHE_TTLS.assignments }
-          );
-          // D2L attempts endpoint may return paged { Objects: [...] } or flat array
-          attempts = Array.isArray(attemptsRaw) ? attemptsRaw : (attemptsRaw as any).Objects ?? [];
-        } catch (error: any) {
-          if (error?.status === 404) {
-            // 404 means no attempts yet, which is a measurement of zero
-            attempts = [];
-          } else if (error?.status === 403) {
-            attemptsForbidden = true;
-            log("DEBUG", `Attempts are forbidden for course ${courseId}: not asking again`);
-          } else {
-            log("DEBUG", `Failed to fetch attempts for quiz ${quiz.QuizId}`, error);
-          }
+    const fetchAttempts = async (quiz: QuizReadData): Promise<QuizAttemptData[] | null> => {
+      // null means "not measured", which is different from an empty list, and
+      // the output says which one it was.
+      if (attemptsForbidden) return null;
+      try {
+        const attemptsRaw = await apiClient.get<{ Objects: QuizAttemptData[] } | QuizAttemptData[]>(
+          apiClient.le(courseId, `/quizzes/${quiz.QuizId}/attempts/`),
+          { ttl: DEFAULT_CACHE_TTLS.assignments }
+        );
+        // D2L attempts endpoint may return paged { Objects: [...] } or flat array
+        return Array.isArray(attemptsRaw) ? attemptsRaw : (attemptsRaw as any).Objects ?? [];
+      } catch (error: any) {
+        if (error?.status === 404) {
+          // 404 means no attempts yet, which is a measurement of zero
+          return [];
+        } else if (error?.status === 403) {
+          attemptsForbidden = true;
+          log("DEBUG", `Attempts are forbidden for course ${courseId}: not asking again`);
+        } else {
+          log("DEBUG", `Failed to fetch attempts for quiz ${quiz.QuizId}`, error);
         }
+        return null;
       }
+    };
+    const attemptsByQuiz: Array<QuizAttemptData[] | null> = new Array(activeQuizzes.length).fill(null);
+    if (activeQuizzes.length > 0) {
+      attemptsByQuiz[0] = await fetchAttempts(activeQuizzes[0]);
+      if (!attemptsForbidden) {
+        const rest = await mapLimit(activeQuizzes.slice(1), QUIZ_CONCURRENCY, fetchAttempts);
+        rest.forEach((value, index) => {
+          attemptsByQuiz[index + 1] = value;
+        });
+      }
+    }
+
+    for (const [index, quiz] of activeQuizzes.entries()) {
+      const attempts = attemptsByQuiz[index];
 
       // Calculate remaining attempts
       const completedAttempts = attempts?.filter((a) => a.IsCompleted) ?? null;

@@ -44,6 +44,9 @@ export function workerEnv(config) {
   return {
     ...process.env,
     WATERLOO_SERVICE: "1",
+    // The worker never shows its update notice in service mode; skip the
+    // registry.npmjs.org request it would otherwise make on every start.
+    D2L_NO_UPDATE_CHECK: "1",
     D2L_BASE_URL: "https://learn.uwaterloo.ca",
     D2L_USERNAME: config.username,
     WATERLOO_PROBE_USERNAME: config.username,

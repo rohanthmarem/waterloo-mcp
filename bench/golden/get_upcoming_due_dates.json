@@ -1,0 +1,406 @@
+{
+  "isError": false,
+  "content": [
+    {
+      "type": "text",
+      "json": [
+        {
+          "type": "quiz",
+          "id": 10190,
+          "title": "Quiz 1",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-10T12:00:00.000Z",
+          "startDate": "2026-09-01T12:00:00.000Z",
+          "endDate": "2026-09-11T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10190&ou=101"
+        },
+        {
+          "type": "quiz",
+          "id": 10290,
+          "title": "Quiz 1",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-10T12:00:00.000Z",
+          "startDate": "2026-09-01T12:00:00.000Z",
+          "endDate": "2026-09-11T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10290&ou=102"
+        },
+        {
+          "type": "quiz",
+          "id": 10390,
+          "title": "Quiz 1",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-10T12:00:00.000Z",
+          "startDate": "2026-09-01T12:00:00.000Z",
+          "endDate": "2026-09-11T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10390&ou=103"
+        },
+        {
+          "type": "quiz",
+          "id": 10490,
+          "title": "Quiz 1",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-10T12:00:00.000Z",
+          "startDate": "2026-09-01T12:00:00.000Z",
+          "endDate": "2026-09-11T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10490&ou=104"
+        },
+        {
+          "type": "assignment",
+          "id": 10152,
+          "title": "Assignment 3",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10152&grpid=0&ou=101"
+        },
+        {
+          "type": "quiz",
+          "id": 10191,
+          "title": "Quiz 2",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": "2026-09-02T12:00:00.000Z",
+          "endDate": "2026-09-12T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10191&ou=101"
+        },
+        {
+          "type": "assignment",
+          "id": 10252,
+          "title": "Assignment 3",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10252&grpid=0&ou=102"
+        },
+        {
+          "type": "quiz",
+          "id": 10291,
+          "title": "Quiz 2",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": "2026-09-02T12:00:00.000Z",
+          "endDate": "2026-09-12T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10291&ou=102"
+        },
+        {
+          "type": "assignment",
+          "id": 10352,
+          "title": "Assignment 3",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10352&grpid=0&ou=103"
+        },
+        {
+          "type": "quiz",
+          "id": 10391,
+          "title": "Quiz 2",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": "2026-09-02T12:00:00.000Z",
+          "endDate": "2026-09-12T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10391&ou=103"
+        },
+        {
+          "type": "assignment",
+          "id": 10452,
+          "title": "Assignment 3",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10452&grpid=0&ou=104"
+        },
+        {
+          "type": "quiz",
+          "id": 10491,
+          "title": "Quiz 2",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-11T12:00:00.000Z",
+          "startDate": "2026-09-02T12:00:00.000Z",
+          "endDate": "2026-09-12T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10491&ou=104"
+        },
+        {
+          "type": "quiz",
+          "id": 10192,
+          "title": "Quiz 3",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-12T12:00:00.000Z",
+          "startDate": "2026-09-03T12:00:00.000Z",
+          "endDate": "2026-09-13T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10192&ou=101"
+        },
+        {
+          "type": "quiz",
+          "id": 10292,
+          "title": "Quiz 3",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-12T12:00:00.000Z",
+          "startDate": "2026-09-03T12:00:00.000Z",
+          "endDate": "2026-09-13T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10292&ou=102"
+        },
+        {
+          "type": "quiz",
+          "id": 10392,
+          "title": "Quiz 3",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-12T12:00:00.000Z",
+          "startDate": "2026-09-03T12:00:00.000Z",
+          "endDate": "2026-09-13T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10392&ou=103"
+        },
+        {
+          "type": "quiz",
+          "id": 10492,
+          "title": "Quiz 3",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-12T12:00:00.000Z",
+          "startDate": "2026-09-03T12:00:00.000Z",
+          "endDate": "2026-09-13T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10492&ou=104"
+        },
+        {
+          "type": "quiz",
+          "id": 10193,
+          "title": "Quiz 4",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-13T12:00:00.000Z",
+          "startDate": "2026-09-04T12:00:00.000Z",
+          "endDate": "2026-09-14T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10193&ou=101"
+        },
+        {
+          "type": "quiz",
+          "id": 10293,
+          "title": "Quiz 4",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-13T12:00:00.000Z",
+          "startDate": "2026-09-04T12:00:00.000Z",
+          "endDate": "2026-09-14T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10293&ou=102"
+        },
+        {
+          "type": "quiz",
+          "id": 10393,
+          "title": "Quiz 4",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-13T12:00:00.000Z",
+          "startDate": "2026-09-04T12:00:00.000Z",
+          "endDate": "2026-09-14T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10393&ou=103"
+        },
+        {
+          "type": "quiz",
+          "id": 10493,
+          "title": "Quiz 4",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-13T12:00:00.000Z",
+          "startDate": "2026-09-04T12:00:00.000Z",
+          "endDate": "2026-09-14T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10493&ou=104"
+        },
+        {
+          "type": "quiz",
+          "id": 10194,
+          "title": "Quiz 5",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-14T12:00:00.000Z",
+          "startDate": "2026-09-05T12:00:00.000Z",
+          "endDate": "2026-09-15T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10194&ou=101"
+        },
+        {
+          "type": "quiz",
+          "id": 10294,
+          "title": "Quiz 5",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-14T12:00:00.000Z",
+          "startDate": "2026-09-05T12:00:00.000Z",
+          "endDate": "2026-09-15T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10294&ou=102"
+        },
+        {
+          "type": "quiz",
+          "id": 10394,
+          "title": "Quiz 5",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-14T12:00:00.000Z",
+          "startDate": "2026-09-05T12:00:00.000Z",
+          "endDate": "2026-09-15T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10394&ou=103"
+        },
+        {
+          "type": "quiz",
+          "id": 10494,
+          "title": "Quiz 5",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-14T12:00:00.000Z",
+          "startDate": "2026-09-05T12:00:00.000Z",
+          "endDate": "2026-09-15T12:00:00.000Z",
+          "url": "https://127.0.0.1:64189/d2l/lms/quizzing/user/quiz_summary.d2l?qi=10494&ou=104"
+        },
+        {
+          "type": "assignment",
+          "id": 10153,
+          "title": "Assignment 4",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-16T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10153&grpid=0&ou=101"
+        },
+        {
+          "type": "assignment",
+          "id": 10253,
+          "title": "Assignment 4",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-16T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10253&grpid=0&ou=102"
+        },
+        {
+          "type": "assignment",
+          "id": 10353,
+          "title": "Assignment 4",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-16T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10353&grpid=0&ou=103"
+        },
+        {
+          "type": "assignment",
+          "id": 10453,
+          "title": "Assignment 4",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-16T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10453&grpid=0&ou=104"
+        },
+        {
+          "type": "assignment",
+          "id": 10154,
+          "title": "Assignment 5",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-21T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10154&grpid=0&ou=101"
+        },
+        {
+          "type": "assignment",
+          "id": 10254,
+          "title": "Assignment 5",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-21T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10254&grpid=0&ou=102"
+        },
+        {
+          "type": "assignment",
+          "id": 10354,
+          "title": "Assignment 5",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-21T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10354&grpid=0&ou=103"
+        },
+        {
+          "type": "assignment",
+          "id": 10454,
+          "title": "Assignment 5",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-21T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10454&grpid=0&ou=104"
+        },
+        {
+          "type": "assignment",
+          "id": 10155,
+          "title": "Assignment 6",
+          "courseId": 101,
+          "courseName": "BENCH 101 Course 1",
+          "dueDate": "2026-09-26T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10155&grpid=0&ou=101"
+        },
+        {
+          "type": "assignment",
+          "id": 10255,
+          "title": "Assignment 6",
+          "courseId": 102,
+          "courseName": "BENCH 102 Course 2",
+          "dueDate": "2026-09-26T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10255&grpid=0&ou=102"
+        },
+        {
+          "type": "assignment",
+          "id": 10355,
+          "title": "Assignment 6",
+          "courseId": 103,
+          "courseName": "BENCH 103 Course 3",
+          "dueDate": "2026-09-26T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10355&grpid=0&ou=103"
+        },
+        {
+          "type": "assignment",
+          "id": 10455,
+          "title": "Assignment 6",
+          "courseId": 104,
+          "courseName": "BENCH 104 Course 4",
+          "dueDate": "2026-09-26T12:00:00.000Z",
+          "startDate": null,
+          "endDate": null,
+          "url": "https://127.0.0.1:64189/d2l/lms/dropbox/user/folder_submit_files.d2l?db=10455&grpid=0&ou=104"
+        }
+      ]
+    }
+  ]
+}
