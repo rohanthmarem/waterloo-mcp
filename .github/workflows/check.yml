@@ -29,4 +29,12 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run build
+      - run: npm run test:racket:runner
+      - run: npx playwright install --with-deps chromium
+      - run: docker run -d --rm --name racket-browser-fixture --read-only --user 65534:65534 --cap-drop ALL --security-opt no-new-privileges:true --memory 512m --cpus 1 --pids-limit 64 --tmpfs /tmp:size=32m,mode=1777 -p 127.0.0.1:19010:8010 waterloo-racket-fixture:local
+      - run: node tests/racket-browser.mjs
+      - if: always()
+        run: docker stop racket-browser-fixture || true
       - run: npm run test:hosting:containers
+        env:
+          WATERLOO_TEST_RACKET: "1"

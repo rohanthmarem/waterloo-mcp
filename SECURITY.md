@@ -21,3 +21,5 @@ Report only the version, error code, request ID, reproduction steps, and redacte
 For an issue that could expose credentials, contact the repository owner privately using the hosting platform’s private reporting feature if enabled. Otherwise request a private contact method without posting exploit details or secrets.
 
 If a client token leaks, revoke it in that user’s registry (and transfer the registry for legacy remote deployment). If a portable owner key leaks, rotate it with `npm run host -- owner USER rotate`; this also invalidates owner cookies. If the VM is compromised, stop the service, revoke its tokens and dedicated authenticator, invalidate affected school sessions, and rebuild from clean source.
+
+Optional Racket programs execute in separate credential-free containers. No school state, secrets, or Docker socket is mounted there. The internal runner network and restricted Racket evaluator are both required. See [Racket execution limits](docs/racket.md). Code and assignment text sent to an agent are visible to that agent’s provider.

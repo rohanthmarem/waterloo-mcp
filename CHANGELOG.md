@@ -1,5 +1,11 @@
 # Changes
 
+## Unreleased
+
+- Optional MCP-controlled Racket workspaces with encrypted code, assignment text, saved revisions, and bounded run output.
+- Separate credential-free Racket runners on per-user internal networks; teaching-language support and restricted execution.
+- Owner-approved agent edits/runs, concurrent-edit protection, and an optional browser editor.
+
 ## 0.4.0
 
 - Add portable hosting on Docker-capable computers and servers, with single-user and per-user-container modes.

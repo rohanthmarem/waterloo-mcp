@@ -1,7 +1,10 @@
 import { mkdir, readFile, writeFile, rename, open } from "node:fs/promises";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import path from "node:path";
+import { racketWriteTools } from "./src/racket-workspace.mjs";
 export const READ_TOOLS = new Set([
+  "list_racket_workspaces",
+  "read_racket_workspace",
   "check_piazza_auth",
   "list_piazza_classes",
   "get_piazza_course_info",
@@ -42,6 +45,7 @@ export const KNOWN_TOOLS = new Set([
   ...READ_TOOLS,
   "download_file",
   ...ROOM_WRITE_TOOLS,
+  ...racketWriteTools,
 ]);
 const stable = (v) =>
   v === null || typeof v !== "object"
@@ -126,11 +130,12 @@ export class Authorizations {
   }
   async page(id) {
     const r = await this.read(id);
-    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p>${r.summary ? `<h2>Review the exact action</h2><pre>${escape(JSON.stringify(r.summary, null, 2))}</pre>` : ""}<pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
+    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p>${r.summary?.sourceCode !== undefined ? `<h2>Program to save or run</h2><pre>${escape(r.summary.sourceCode)}</pre>` : ""}${r.summary ? `<h2>Review the exact action</h2><pre>${escape(JSON.stringify(r.summary, null, 2))}</pre>` : ""}<pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
   }
 }
 export function needsApproval(name, args) {
   return (
+    racketWriteTools.includes(name) ||
     ROOM_WRITE_TOOLS.has(name) ||
     name === "download_file" ||
     (name === "get_syllabus" && args.downloadPath !== undefined)
@@ -154,19 +159,26 @@ export function describeTool(t) {
     annotations: {
       ...t.annotations,
       readOnlyHint:
+        !racketWriteTools.includes(t.name) &&
         !ROOM_WRITE_TOOLS.has(t.name) &&
         t.name !== "download_file" &&
         t.name !== "get_syllabus",
       destructiveHint:
+        racketWriteTools.includes(t.name) ||
         ROOM_WRITE_TOOLS.has(t.name) ||
         t.name === "download_file" ||
         t.name === "get_syllabus",
     },
-    ...(["download_file", "get_syllabus", ...ROOM_WRITE_TOOLS].includes(t.name)
+    ...([
+      "download_file",
+      "get_syllabus",
+      ...ROOM_WRITE_TOOLS,
+      ...racketWriteTools,
+    ].includes(t.name)
       ? {
           description:
             t.description +
-            (ROOM_WRITE_TOOLS.has(t.name)
+            (ROOM_WRITE_TOOLS.has(t.name) || racketWriteTools.includes(t.name)
               ? " This action requires explicit owner approval. Open the returned approval URL for the owner and retry the exact arguments with authorizationId only after approval."
               : " Saving a file requires explicit user approval at the returned approval URL. Retry with the returned authorizationId only after the user approves. Downloads must use /state/downloads."),
           inputSchema: {

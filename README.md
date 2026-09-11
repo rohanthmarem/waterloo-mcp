@@ -6,6 +6,8 @@ Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions
 
 This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MCP server](https://github.com/RohanMuppa/brightspace-mcp-server). It is not affiliated with Waterloo, D2L, Duo, Piazza, or exe.dev.
 
+Optional: [Racket workspaces driven through MCP](docs/racket.md), with assignment text, code editing, test runs, and an owner browser view. Add `--racket` to a hosted user.
+
 ## What you get
 
 - 34 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.

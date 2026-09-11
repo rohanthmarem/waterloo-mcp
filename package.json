@@ -25,7 +25,8 @@
     "bench:live": "node bench/live.mjs",
     "host": "node scripts/host.mjs",
     "owner": "node scripts/owner.mjs",
-    "test:hosting:containers": "node tests/host-containers.mjs"
+    "test:hosting:containers": "node tests/host-containers.mjs",
+    "test:racket:runner": "node tests/racket-runner.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

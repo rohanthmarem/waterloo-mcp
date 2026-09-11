@@ -59,6 +59,7 @@ try {
       username: `fixture${id}@uwaterloo.ca`,
       owner: `${id}@example.invalid`,
       port: await port(),
+      racket: process.env.WATERLOO_TEST_RACKET === "1",
     };
     await addHostUser(dir, u);
     const home = userHome(dir, id),
@@ -126,7 +127,17 @@ try {
     (await exec("docker", ["inspect", ...ids], { maxBuffer: 4 * 1024 * 1024 }))
       .stdout,
   );
-  const running = await auditRunningHost(dir, containers);
+  const networkIds = [
+    ...new Set(
+      containers.flatMap((c) =>
+        Object.values(c.NetworkSettings.Networks).map((n) => n.NetworkID),
+      ),
+    ),
+  ];
+  const networks = JSON.parse(
+    (await exec("docker", ["network", "inspect", ...networkIds])).stdout,
+  );
+  const running = await auditRunningHost(dir, containers, root, networks);
   console.log(JSON.stringify(running));
   assert(running.passed);
   // Model the TLS proxy's HTTP hop, including the original Host. No DNS or
@@ -189,6 +200,106 @@ try {
       JSON.parse(r.content[0].text).bookings[0].details.room,
       u.id + "-private-fixture",
     );
+    if (u.racket) {
+      const container = containers.find(
+        (c) => c.Config.Labels["com.docker.compose.service"] === u.id,
+      );
+      const networkName =
+        container.Config.Labels["com.docker.compose.project"] + "_" + u.id;
+      const gateway = container.NetworkSettings.Networks[networkName].Gateway;
+      const expectedGateway = gateway
+        .split(".")
+        .reverse()
+        .map((v) => Number(v).toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+      await exec("docker", [
+        "exec",
+        container.Id,
+        "node",
+        "-e",
+        "const rows=require('node:fs').readFileSync('/proc/net/route','utf8').trim().split('\\n').slice(1).map(v=>v.trim().split(/\\s+/));process.exit(rows.some(v=>v[1]==='00000000' && v[2]===process.argv[1])?0:1)",
+        expectedGateway,
+      ]);
+      const page = await request(u.origin + "/racket", {
+        headers: { Authorization: "Bearer " + u.owner },
+      });
+      assert.equal(page.status, 200);
+      assert((await page.text()).includes("Racket workspace"));
+      const doc = {
+        id: "a01",
+        title: u.id + " assignment",
+        language: "htdp/bsl",
+        code: "(check-expect (+ 1 1) 2)",
+        assignment: {
+          title: "Practice",
+          text: u.id + " private assignment",
+          url: "",
+        },
+        expectedRevision: 0,
+      };
+      const save = await request(u.origin + "/racket/api", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + u.owner,
+          Origin: u.origin,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: "save_racket_workspace", args: doc }),
+      });
+      assert.equal(save.status, 200, await save.text());
+      const result = await request(u.origin + "/racket/api", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + u.owner,
+          Origin: u.origin,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "run_racket_workspace",
+          args: { id: "a01", expectedRevision: 1 },
+        }),
+      });
+      assert.equal(result.status, 200);
+      const workspace = await result.json();
+      assert.equal(
+        workspace.lastRun.status,
+        "completed",
+        JSON.stringify(workspace.lastRun),
+      );
+      const read = await c.callTool({
+        name: "read_racket_workspace",
+        arguments: { id: "a01" },
+      });
+      assert.equal(
+        JSON.parse(read.content[0].text).assignment.text,
+        u.id + " private assignment",
+      );
+      const denied = await c.callTool({
+        name: "save_racket_workspace",
+        arguments: { ...doc, expectedRevision: 1 },
+      });
+      assert.equal(
+        JSON.parse(denied.content[0].text).error.code,
+        "APPROVAL_REQUIRED",
+      );
+      assert.equal(
+        (
+          await request(u.origin + "/racket", {
+            headers: { Authorization: "Bearer " + u.token },
+          })
+        ).status,
+        403,
+      );
+      console.log(
+        JSON.stringify({
+          user: u.id,
+          racketReadIsolated: true,
+          racketExecution: true,
+          agentWriteRequiresApproval: true,
+        }),
+      );
+    }
     const other = people.find((p) => p.id !== u.id);
     assert.equal(
       (
