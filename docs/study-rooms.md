@@ -2,6 +2,8 @@
 
 The MCP supports the study rooms listed on [Waterloo LibCal](https://libcal.uwaterloo.ca/) at Davis Centre (`davis`), Dana Porter (`porter`), and Musagetes (`musagetes`). Availability is public. Checkout uses the saved Waterloo browser session and the normal LibCal/WatIAM sign-in redirect.
 
+Bookings belong to the account configured for this instance. On a shared host, use that person's MCP URL and agent token. Approval opens on the same user's hostname, using their owner login. Booking history is private to that profile; portable file paths below are relative to `private/hosting/users/USER/`.
+
 ## Agent workflow
 
 1. Call `list_study_rooms` to discover room IDs, names, libraries, and capacities.

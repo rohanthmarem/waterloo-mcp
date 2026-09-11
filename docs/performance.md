@@ -299,3 +299,9 @@ The runtime stage no longer contains a compiler, test runner, or the TypeScript 
 - A worker that exits (out of memory, crash) is not restarted: the gateway keeps its dead client and every tool answers `UPSTREAM_UNAVAILABLE` until the container restarts, while the health check stays green because `/status` does not touch the worker. Reconnecting on transport close would fix this; it is a behavior change and was not made here.
 - The D2L content table-of-contents endpoint returns a whole course tree in one request instead of one per module. Its field set differs from the per-module endpoint, so switching needs verification against a live course.
 - A slimmer base image (Node plus only Chromium) would remove roughly a gigabyte, at the cost of leaving the pinned Playwright image and its tested user and library layout.
+
+## Shared hosting and optional Racket
+
+The measurements above describe the school-data worker. Each hosted user has a separate worker, cache, and browser process; memory and concurrent work therefore increase with active users. They do not share cached school responses.
+
+Racket runs use a separate per-user container with one active run at a time. Its time, memory, and output limits are documented in [Racket](racket.md#execution-and-data-protection). The LEARN benchmark does not measure Racket execution, image-build time, browser editing latency, or shared-host capacity. Do not use its numbers as sizing evidence for those workloads.

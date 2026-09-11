@@ -52,6 +52,19 @@ Example new workspace:
 }
 ```
 
+After saving, use the returned revision for the run:
+
+```json
+{
+  "id": "cs135-a01",
+  "expectedRevision": 1
+}
+```
+
+Send this to `run_racket_workspace`, then follow its separate approval request. Read results with `read_racket_workspace` and `{"id":"cs135-a01"}`. A save increments the revision and clears `lastRun`; a run retains the code revision and replaces the latest result. There is no run history or workspace deletion tool.
+
+Workspace IDs start with a lowercase letter and use only lowercase letters, digits, and hyphens, up to 40 characters. Code and assignment text each have a 24 KiB UTF-8 limit. Titles have a 160-character limit; the workspace title cannot be empty. Supply an empty string or an HTTPS URL without embedded credentials for the assignment source.
+
 Use the program body without a `#lang` line; `language` supplies it. Supported languages are `htdp/bsl`, `htdp/bsl+`, `htdp/isl`, `htdp/isl+`, `htdp/asl`, and `racket`. Teaching-language `check-expect` tests and Racket `module+ test` blocks run. A `completed` result means the process finished, not that every test passed: test libraries can report failures in output without a failing process exit code.
 
 The service reserves one mutation at a time per user. Busy, stale-revision, and failed runner health checks are detected before an approval is consumed. After a run is sent, an uncertain transport failure can require a new approval; inspect saved results first.
@@ -92,4 +105,12 @@ npm run test:racket:runner
 WATERLOO_TEST_RACKET=1 npm run test:hosting:containers
 ```
 
-For the real browser-and-MCP test, start a temporary runner bound only to localhost, then run `RACKET_RUNNER_URL=http://127.0.0.1:19010 node tests/racket-browser.mjs`. The test creates fresh keys and synthetic assignment data, signs in, saves and runs teaching-language code, approves an agent edit, and verifies that conflicting browser edits are preserved. It never signs in to Waterloo.
+For the real browser-and-MCP test, first run `npm run test:racket:runner` to build the test image and install Chromium with `npx playwright install chromium`. Start a temporary runner bound only to localhost:
+
+```sh
+docker run -d --rm --name racket-browser-fixture --read-only --user 65534:65534 --cap-drop ALL --security-opt no-new-privileges:true --memory 512m --cpus 1 --pids-limit 64 --tmpfs /tmp:size=32m,mode=1777 -p 127.0.0.1:19010:8010 waterloo-racket-fixture:local
+RACKET_RUNNER_URL=http://127.0.0.1:19010 node tests/racket-browser.mjs
+docker stop racket-browser-fixture
+```
+
+Use a free local port and a unique container name if that fixture already exists. Stop the temporary container after a failed test too. The test creates fresh keys and synthetic assignment data, signs in, saves and runs teaching-language code, approves an agent edit, and verifies that conflicting browser edits are preserved. It never signs in to Waterloo.
