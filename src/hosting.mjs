@@ -38,6 +38,7 @@ export const userHome = (dir, id) => path.join(dir, "users", userId.parse(id));
 function validateLocalPort(u) {
   const origin = new URL(u.origin);
   if (
+    origin.protocol === "http:" &&
     ["localhost", "127.0.0.1"].includes(origin.hostname) &&
     Number(origin.port || (origin.protocol === "https:" ? 443 : 80)) !== u.port
   )

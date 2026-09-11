@@ -7,6 +7,7 @@ import {
   symlink,
   writeFile,
   access,
+  readFile,
   rm,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -44,15 +45,28 @@ test("interrupting host start releases its admin lock", async () => {
       "--port=8101",
     ]);
     const marker = path.join(dir, "docker-started");
+    const signaled = path.join(dir, "docker-signaled");
+    const finish = path.join(dir, "docker-can-exit");
+    const stopped = path.join(dir, "docker-stopped");
     await writeFile(
       path.join(dir, "bin/docker"),
       "#!" +
         process.execPath +
-        '\nrequire("node:fs").writeFileSync(' +
+        "\n" +
+        'const fs=require("node:fs");fs.writeFileSync(' +
         JSON.stringify(marker) +
-        ', "ready");setInterval(()=>{},1000);\n',
+        ",String(process.pid));" +
+        'process.on("SIGINT",()=>{fs.writeFileSync(' +
+        JSON.stringify(signaled) +
+        ',"yes");});' +
+        "setInterval(()=>{if(fs.existsSync(" +
+        JSON.stringify(finish) +
+        ")){fs.writeFileSync(" +
+        JSON.stringify(stopped) +
+        ',"done");process.exit(0);}},20);\n',
       { mode: 0o700 },
     );
+
     child = spawn(process.execPath, [cli, "start"], {
       env: {
         ...process.env,
@@ -76,7 +90,26 @@ test("interrupting host start releases its admin lock", async () => {
     }
     assert(started, "fake Docker did not start");
     child.kill("SIGINT");
-    await done;
+    for (let i = 0; i < 100; i++) {
+      if (
+        await access(signaled).then(
+          () => true,
+          () => false,
+        )
+      )
+        break;
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    await access(signaled);
+    await access(path.join(dir, "private/hosting/.admin.lock"));
+    await assert.rejects(exec(process.execPath, [cli, "render"]), (e) =>
+      e.stderr.includes("HOST_ADMIN_BUSY"),
+    );
+    await writeFile(finish, "yes");
+    assert.equal(await done, 130);
+    await access(stopped);
+    const pid = Number(await readFile(marker, "utf8"));
+    assert.throws(() => process.kill(pid, 0), { code: "ESRCH" });
     await assert.rejects(
       access(path.join(dir, "private/hosting/.admin.lock")),
       { code: "ENOENT" },
