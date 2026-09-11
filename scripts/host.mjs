@@ -1,6 +1,5 @@
 import path from "node:path";
 import { spawn, execFile } from "node:child_process";
-import { promisify } from "node:util";
 import { mkdir, open, unlink } from "node:fs/promises";
 import {
   hostingDir,
@@ -23,7 +22,21 @@ const flags = Object.fromEntries(
     }),
 );
 const dir = hostingDir();
-const capture = promisify(execFile);
+const capture = (command, args, options = {}) =>
+  new Promise((resolve, reject) => {
+    if (stopping) return reject(new Error("HOST_INTERRUPTED"));
+    const child = execFile(
+      command,
+      args,
+      { ...options, timeout: 15000, detached: true },
+      (error, stdout, stderr) => {
+        if (activeChild === child) activeChild = undefined;
+        if (stopping) return reject(new Error("HOST_INTERRUPTED"));
+        error ? reject(error) : resolve({ stdout, stderr });
+      },
+    );
+    activeChild = child;
+  });
 async function runningAudit() {
   if (stopping) throw new Error("HOST_INTERRUPTED");
   const { stdout } = await capture("docker", [
@@ -64,7 +77,11 @@ const run = (command, args, env = process.env) =>
     child.on("error", reject);
     child.on("exit", (code) => {
       if (activeChild === child) activeChild = undefined;
-      code === 0 ? resolve() : reject(new Error("HOST_COMMAND_FAILED"));
+      code === 0
+        ? resolve()
+        : reject(
+            new Error(stopping ? "HOST_INTERRUPTED" : "HOST_COMMAND_FAILED"),
+          );
     });
   });
 let adminLock, releasePromise;
@@ -79,8 +96,7 @@ function releaseAdminLock() {
 }
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, () => {
-    if (stopping) return;
-    stopping = signal;
+    stopping ??= signal;
     const child = activeChild;
     if (!child) return; // Let an in-progress file operation finish before finally unlocks.
     const terminate = (signal) => {
@@ -88,7 +104,10 @@ for (const signal of ["SIGINT", "SIGTERM"])
         if (child.spawnfile === "docker") process.kill(-child.pid, signal);
         else child.kill(signal);
       } catch (e) {
-        if (e.code !== "ESRCH") throw e;
+        if (e.code !== "ESRCH")
+          console.error(
+            "HOST_SIGNAL_FAILED: waiting for the active command before unlocking.",
+          );
       }
     };
     terminate(signal);
@@ -188,8 +207,9 @@ try {
         code: error.message?.startsWith("HOST_")
           ? error.message
           : "HOST_SETUP_FAILED",
-        action:
-          "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
+        action: stopping
+          ? "The command was interrupted. Its admin lock is released after the active operation stops."
+          : "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
       },
     }),
   );
