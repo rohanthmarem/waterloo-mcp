@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update setup, agent connection, operations, security, and troubleshooting guides for portable hosting and optional Racket. Add a portable client configuration example.
+
 - Optional MCP-controlled Racket workspaces with encrypted code, assignment text, saved revisions, and bounded run output.
 - Separate credential-free Racket runners on per-user internal networks; teaching-language support and restricted execution.
 - Owner-approved agent edits/runs, concurrent-edit protection, and an optional browser editor.

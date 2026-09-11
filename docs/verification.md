@@ -1,4 +1,6 @@
-# Racket feature verification
+# Verification results
+
+## Racket feature verification
 
 Checked on 2026-09-11 with synthetic accounts and assignments.
 
@@ -88,7 +90,7 @@ npm run audit:package
 
 The audit reads `git ls-files`, so stage intended files first in a new local repository. The scan detects common mistakes; inspect the tracked file list yourself before sharing. Never treat a successful pattern scan as proof that arbitrary sensitive data cannot exist.
 
-For your deployed instance:
+For a legacy exe.dev instance:
 
 ```sh
 npm run doctor
@@ -97,3 +99,7 @@ npm run smoke -- private/clients/YOUR-TOKEN-FILE.token --live
 ```
 
 `doctor` checks local files. The first smoke test checks the remote connection and catalog. The second checks authentication, course listing, and Odyssey. A successful status endpoint or tool listing alone does not prove Waterloo data access.
+
+For portable hosting, run `npm run host -- doctor USER` and `npm run host -- audit --running`. Connect the agent using that profile's URL and token, discover tools, then call `check_auth`, `get_my_courses`, and `get_odyssey_schedule`. If Racket is enabled, list workspaces and complete a separately approved synthetic save/run. These checks do not require or authorize a real booking or coursework submission.
+
+The hosting-only results above describe that earlier snapshot. The Racket section adds Linux ARM64 container and macOS Colima verification; Windows hosting remains untested. CI passed for the final implementation, including the real Racket runner, browser workflow, and two-user containers. Documentation-only updates do not imply a new production deployment or another live school verification.

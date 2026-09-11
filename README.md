@@ -10,10 +10,11 @@ Optional: [Racket workspaces driven through MCP](docs/racket.md), with assignmen
 
 ## What you get
 
-- 34 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.
+- 34 core tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.
+- Four optional Racket tools to list, read, save, and run assignment workspaces.
 - Text extraction from HTML, PDFs and Office files; PDF page images for handwritten notes; local audio/video transcription.
 - Separate tokens for your agents, with expiry and revocation.
-- Browser approval before a tool saves a download, books a room, or cancels a booking. Agents cannot approve their own requests through their MCP token.
+- Browser approval before an agent saves a download, books or cancels a room, saves Racket code, or runs it. Agents cannot approve their own requests through their MCP token.
 - Encrypted saved login state, repeatable Docker deployment, and errors with a code and a next step.
 
 See [Piazza setup](docs/piazza.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md). Outlook mail is not included.
@@ -129,7 +130,9 @@ The first check lists tools. `--live` checks authentication, courses, and Odysse
 
 Open `https://YOUR-VM.exe.xyz/setup/piazza` as the owner. Enter your Piazza login and wait for **Piazza connected**. Refresh the MCP tool list, then call `check_piazza_auth` and `list_piazza_classes`. The encrypted login renews on the VM; your local computer can be offline. See [Piazza setup and limits](docs/piazza.md).
 
-## Everyday use
+## Everyday use: legacy exe.dev
+
+For portable hosting, use the per-user commands in [operations](docs/operations.md#portable-hosting). Do not use the legacy deployment commands against generated hosting profiles.
 
 | Task                               | Command                                                                             |
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
@@ -153,7 +156,9 @@ authorization.mjs    Tool allowlist and one-use approvals
 outlines.mjs         Course outline discovery
 libcal.mjs           Study-room tools and encrypted booking history
 piazza.mjs           Read-only Piazza classes, feeds, search, and discussions
-src/                 Configuration, errors, bounded read cache
+src/                 Configuration, errors, read cache, encrypted Racket workspaces
+racket-runner/       Separate restricted Racket execution service
+web/                 Optional owner assignment and code editor
 scripts/             Setup, login, client tokens, deploy, diagnostics
 upstream/            Vendored MIT Brightspace client plus Waterloo readers
 renew.mjs            Saved-session and optional authenticator renewal
@@ -162,4 +167,15 @@ bench/               Offline performance suite against a fake LEARN; see docs/pe
 private/             Your local secrets and state; never shared
 ```
 
-Release 0.4.0 adds portable authentication, single/multi-user hosting, remote login import, and isolation audits. The tool catalog remains at 34. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Release 0.4.0 adds portable authentication, single/multi-user hosting, remote login import, and isolation audits. The catalog has 34 core tools, or 38 with the unreleased Racket feature enabled. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Documentation map
+
+- [Hosting](docs/hosting.md): choose a device, add users, configure HTTPS, and audit separation.
+- [Clients](docs/clients.md): connect Grokbot or another MCP agent and refresh its tools.
+- [Authentication](docs/authentication.md): import a school login and recover an expired session.
+- [Tools](docs/tools.md): supported reads, optional tools, and approval rules.
+- [Racket](docs/racket.md): MCP examples, shared editing, execution limits, and troubleshooting.
+- [Operations](docs/operations.md): updates, private backups, restarts, and recovery.
+- [Security](SECURITY.md), [errors](docs/errors.md), and [verification](docs/verification.md): protections, failure handling, and tested limits.
+- [Contributing](CONTRIBUTING.md): source checks and tests without school credentials.

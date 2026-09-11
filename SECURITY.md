@@ -23,3 +23,11 @@ For an issue that could expose credentials, contact the repository owner private
 If a client token leaks, revoke it in that user’s registry (and transfer the registry for legacy remote deployment). If a portable owner key leaks, rotate it with `npm run host -- owner USER rotate`; this also invalidates owner cookies. If the VM is compromised, stop the service, revoke its tokens and dedicated authenticator, invalidate affected school sessions, and rebuild from clean source.
 
 Optional Racket programs execute in separate credential-free containers. No school state, secrets, or Docker socket is mounted there. The internal runner network and restricted Racket evaluator are both required. See [Racket execution limits](docs/racket.md). Code and assignment text sent to an agent are visible to that agent’s provider.
+
+## Racket data and approvals
+
+Each profile stores Racket documents and latest results encrypted under its private state directory. Approval records include proposed code and remain private to the profile; do not include them in public diagnostics. Read tools expose this user's assignment text, code, and results to any active agent token for that user. Tokens are not restricted to individual courses or workspaces.
+
+Agent saves and runs require separate approvals bound to the client, exact arguments, and saved revision. Owner browser saves/runs are direct authenticated owner actions. A revision conflict prevents an older editor or agent from replacing a newer document without reading it first.
+
+The runner receives only code and language, with no assignment text or secret environment. Container limits and the restricted evaluator deny ordinary file, network, process, and unsafe FFI access. These restrictions do not prove protection from every runtime vulnerability. Never mount credentials, host directories, or a Docker socket into a runner. A failed runner must not trigger execution inside the MCP process.

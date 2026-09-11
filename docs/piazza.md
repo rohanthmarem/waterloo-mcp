@@ -1,16 +1,16 @@
 # Piazza
 
-Piazza is optional. It uses a separate Piazza email/password login, stored encrypted on the VM. It does not rely on your local browser or Waterloo/Duo session. A person may use the same password for both accounts, but the server does not assume that or copy the Waterloo password during setup.
+Piazza is optional. It uses a separate Piazza email/password login, stored encrypted on your host. It does not rely on your local browser or Waterloo/Duo session. A person may use the same password for both accounts, but the server does not assume that or copy the Waterloo password during setup.
 
 ## Connect once
 
-1. Deploy this release and sign in to your private exe.dev preview as its owner.
-2. Open `https://YOUR-VM.exe.xyz/setup/piazza`.
+1. Start your instance and sign in as its owner: `/login` with your private owner key in portable mode, or the private exe.dev preview in legacy mode.
+2. Open `/setup/piazza` on that same user’s hostname.
 3. Enter your Piazza email and password. Click **Verify and save encrypted Piazza login**.
 4. Wait for **Piazza connected**. The server checks the login before replacing a saved account.
 5. Refresh your agent's MCP tool list. Run `check_piazza_auth`, then `list_piazza_classes`.
 
-Agent tokens cannot open the setup page or submit credentials. Use your normal exe.dev owner browser session. Never paste a password into an agent conversation or commit it to this repository.
+Agent tokens cannot open the setup page or submit credentials. Use the owner browser session for that user’s instance. Never paste a password into an agent conversation or commit it to this repository.
 
 ## Read courses and discussions
 
@@ -39,7 +39,7 @@ Full posts are Markdown, with math expressions preserved. Each answer or follow-
 
 ## Automatic renewal and recovery
 
-The password, account identity, and cookies are encrypted together in `private/state/piazza/session.encrypted.json`, using the separately mounted session key. The server uses HTTP requests for Piazza; it does not start Chromium. Login works after a process restart. When a session expires, one read can renew it once with the encrypted password and retry. Failed automatic logins have a two-minute cooldown to avoid repeated sign-in attempts.
+The password, account identity, and cookies are encrypted together in `private/state/piazza/session.encrypted.json`, using the separately mounted session key. In portable hosting this path is relative to `private/hosting/users/USER/`; each profile has its own record and key. The server uses HTTP requests for Piazza; it does not start Chromium. Login works after a process restart. When a session expires, one read can renew it once with the encrypted password and retry. Failed automatic logins have a two-minute cooldown to avoid repeated sign-in attempts.
 
 If Piazza changes your password, adds another verification step, or rejects automated login, `PIAZZA_AUTH_REQUIRED` asks you to reconnect through the owner page. This is not a guarantee of permanent unattended access. A failed reconnect preserves the previous encrypted record.
 

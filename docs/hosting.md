@@ -1,6 +1,6 @@
 # Host on your own device
 
-Use one Docker-capable computer or server. Choose **single** for one Waterloo account, or **multi** for several people on the same machine. Both modes run one container per person. Each person can connect several agents using separate revocable tokens.
+Use one Docker-capable computer or server. Choose **single** for one Waterloo account, or **multi** for several people on the same machine. Both modes run one MCP container per person, plus a separate runner when Racket is enabled. Each person can connect several agents using separate revocable tokens.
 
 ## Requirements and tested limits
 
@@ -118,7 +118,7 @@ The audit prints JSON with `scope`, `users`, `checksPassed`, `checksTotal`, `pas
 
 Owner-key rotation invalidates previous owner keys and owner cookies, while keeping school encryption keys and agent tokens. Agent revocation affects subsequent requests for that user immediately. Owner browser sessions expire after eight hours. Bad owner-form sign-ins are limited to ten attempts per minute per instance. A correct owner key still works during that limit, so another person cannot lock the owner out.
 
-To stop one person's service, use `docker compose -f private/hosting/compose.json stop alice`. Revoke their agent tokens as well. `host stop` stops the whole host. A deliberately stopped user causes the running audit to fail until restarted; `host start` starts every configured user. Keep booking records until uncertain bookings are resolved. There is no automatic deletion of user data.
+To stop one person's service, use `docker compose -f private/hosting/compose.json stop alice`; include `racket_alice` too when that user has Racket enabled. Revoke their agent tokens as well. `host stop` stops the whole host. A deliberately stopped user causes the running audit to fail until restarted; `host start` starts every configured user. Keep booking records until uncertain bookings are resolved. There is no automatic deletion of user data.
 
 Update source, install dependencies, build, and run `host start` to rebuild containers. Run `host render` only when you intend to regenerate Compose/Caddy files from the manifest. Back up each profile separately with its matching encryption keys, stored securely outside the source repository. Never restore an old active software-authenticator counter or run its copy on two hosts.
 
@@ -127,3 +127,19 @@ Update source, install dependencies, build, and run `host start` to rebuild cont
 Other users and their agents receive no access to each other's keys, state, browser processes, caches, or approval records. **The host administrator and anyone with Docker/root access remain trusted:** they can read mounted keys or change the application. A person who does not trust the administrator should deploy their own host. This release does not provide hardware enclaves or protection from a compromised operating system.
 
 Existing exe.dev installations keep their original authentication mode unless deliberately migrated. Do not copy the existing personal deployment's credentials into a multi-user demo or new person's profile.
+
+## Add optional Racket execution
+
+Add `--racket` to a user's `host add` command. For an existing user, set `"racket": true` on that user's entry in `private/hosting/host.json`, then run:
+
+```sh
+npm run host -- render
+npm run host -- start
+npm run host -- audit --running
+```
+
+Budget another 512 MB of container memory per enabled user, plus disk space for the Racket image. The runner has one CPU and a 64-process limit. Each user's MCP retains its normal network access and reaches only its own runner over a separate internal network. No runner port is published, and no credentials or host directories are mounted into it.
+
+Refresh the agent's tool catalog. It should show 38 tools, including the four Racket tools. Call `list_racket_workspaces`; an empty list is normal for a new profile. Follow the [approved save/run example](racket.md#agent-workflow) to verify execution. Tool discovery alone does not test the runner.
+
+See [operations](operations.md#portable-hosting) for updates, stopping a user's runner, backups, and recovery. See [Racket](racket.md) for MCP use and the optional `/racket` browser editor.
