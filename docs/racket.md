@@ -58,7 +58,7 @@ Use the program body without a `#lang` line; `language` supplies it. Supported l
 
 Open `/racket` on your own instance and sign in with the owner key. Assignment instructions appear beside the editor. Save and run buttons are direct owner actions. Agent edits still go through the approval page.
 
-The page refreshes saved changes every five seconds while you are not typing. If you have unsaved changes, it keeps your text and warns that a new revision exists. It never silently replaces your typing. Use Open to load the newer saved revision after preserving or discarding your changes.
+The page refreshes saved changes every five seconds while you are not typing. If you have unsaved changes, it keeps your text and warns that a new revision exists. It never silently replaces your typing. Editing pauses briefly while your own save or run is in progress, so its response cannot overwrite new typing. Use Open to load the newer saved revision after preserving or discarding your changes.
 
 Assignments are displayed as plain text with an optional HTTPS source link. There is no automatic upload to LEARN, homework submission, grade integration, arbitrary file browser, full DrRacket desktop, or graphical `big-bang` window. This first version supports one source file per workspace, with up to 50 workspaces per user. Images and rich GUI output are not displayed.
 

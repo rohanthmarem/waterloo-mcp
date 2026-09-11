@@ -7,6 +7,19 @@ function message(text, error = false) {
   $("message").dataset.error = String(error);
 }
 function controls() {
+  for (const id of [
+    "id",
+    "title",
+    "language",
+    "code",
+    "assignment-title",
+    "assignment-url",
+    "assignment-text",
+    "load",
+    "new",
+    "workspaces",
+  ])
+    $(id).disabled = busy;
   $("save").disabled = busy;
   $("run").disabled = busy || dirty || !current;
   $("revision").textContent = current
@@ -159,7 +172,9 @@ window.addEventListener("beforeunload", (e) => {
 setInterval(async () => {
   if (!current || busy) return;
   try {
-    const value = await call("read_racket_workspace", { id: current.id });
+    const polledId = current.id;
+    const value = await call("read_racket_workspace", { id: polledId });
+    if (busy || !current || current.id !== polledId) return;
     if (
       value.revision !== current.revision ||
       value.lastRun?.at !== current.lastRun?.at

@@ -70,7 +70,13 @@ try {
     .fill(
       "(define (square x) (* x x))\n(check-expect (square 4) 16)\n(check-expect (square -3) 9)",
     );
+  await page.route("**/racket/api", async (route) => {
+    if (route.request().postDataJSON()?.name === "save_racket_workspace")
+      await new Promise((r) => setTimeout(r, 300));
+    await route.continue();
+  });
   await page.getByRole("button", { name: "Save changes" }).click();
+  assert(await page.getByLabel("Racket program").isDisabled());
   await page.waitForFunction(() =>
     document
       .getElementById("revision")
@@ -160,7 +166,30 @@ try {
       .getElementById("revision")
       .textContent.includes("Revision 2 · saved"),
   );
-  await page.getByRole("button", { name: "Run saved code" }).click();
+  const runArgs = { id: saved.id, expectedRevision: 2 };
+  const pendingRun = JSON.parse(
+    (
+      await client.callTool({
+        name: "run_racket_workspace",
+        arguments: runArgs,
+      })
+    ).content[0].text,
+  ).error;
+  assert.equal(pendingRun.code, "APPROVAL_REQUIRED");
+  await approval.goto(pendingRun.approvalUrl);
+  await approval
+    .getByRole("button", { name: "Approve this action once" })
+    .click();
+  const executed = await client.callTool({
+    name: "run_racket_workspace",
+    arguments: { ...runArgs, authorizationId: pendingRun.authorizationId },
+  });
+  assert(!executed.isError);
+  assert.equal(
+    JSON.parse(executed.content[0].text).lastRun.status,
+    "completed",
+  );
+
   await page.waitForFunction(() =>
     document
       .getElementById("run-status")
