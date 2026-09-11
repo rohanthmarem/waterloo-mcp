@@ -254,6 +254,6 @@ try {
   process.exitCode = 1;
 } finally {
   for (const c of clients) await c.close();
-  if (configured) await compose("down", "--rmi", "local", "--remove-orphans");
+  if (configured) await compose("down", "--rmi", "all", "--remove-orphans");
   await rm(dir, { recursive: true, force: true });
 }

@@ -116,9 +116,9 @@ The audit prints JSON with `scope`, `users`, `checksPassed`, `checksTotal`, `pas
 - Running-container checks verify the actual user containers, exact private mounts, read-only secrets/root filesystem, non-root process, dropped capabilities, separate network/process settings, resource limits, and loopback-only ports.
 - These are configuration checks, not a penetration test, continuous monitoring, or proof that a compromised host cannot leak secrets. Run the audit after administrative changes. No Docker socket is exposed inside the application.
 
-Owner-key rotation invalidates previous owner keys and owner cookies, while keeping school encryption keys and agent tokens. Agent revocation affects subsequent requests for that user immediately. Owner browser sessions expire after eight hours. A failed owner-form sign-in is limited to ten attempts per minute per instance.
+Owner-key rotation invalidates previous owner keys and owner cookies, while keeping school encryption keys and agent tokens. Agent revocation affects subsequent requests for that user immediately. Owner browser sessions expire after eight hours. Bad owner-form sign-ins are limited to ten attempts per minute per instance. A correct owner key still works during that limit, so another person cannot lock the owner out.
 
-To stop one person's service, use `docker compose -f private/hosting/compose.json stop alice`. Revoke their agent tokens as well. `host stop` stops the whole host. Keep booking records until uncertain bookings are resolved. There is no automatic deletion of user data.
+To stop one person's service, use `docker compose -f private/hosting/compose.json stop alice`. Revoke their agent tokens as well. `host stop` stops the whole host. A deliberately stopped user causes the running audit to fail until restarted; `host start` starts every configured user. Keep booking records until uncertain bookings are resolved. There is no automatic deletion of user data.
 
 Update source, install dependencies, build, and run `host start` to rebuild containers. Run `host render` only when you intend to regenerate Compose/Caddy files from the manifest. Back up each profile separately with its matching encryption keys, stored securely outside the source repository. Never restore an old active software-authenticator counter or run its copy on two hosts.
 

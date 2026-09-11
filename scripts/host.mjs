@@ -49,15 +49,35 @@ async function runningAudit() {
   console.log(JSON.stringify(report));
   if (!report.passed) throw new Error("HOST_ISOLATION_FAILED");
 }
+let activeChild;
 const run = (command, args, env = process.env) =>
   new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: "inherit", env });
+    activeChild = child;
     child.on("error", reject);
     child.on("exit", (code) =>
       code === 0 ? resolve() : reject(new Error("HOST_COMMAND_FAILED")),
     );
   });
 let adminLock;
+async function releaseAdminLock() {
+  const lock = adminLock;
+  adminLock = undefined;
+  if (lock) {
+    await lock.close();
+    await unlink(path.join(dir, ".admin.lock"));
+  }
+}
+let stopping = false;
+for (const signal of ["SIGINT", "SIGTERM"])
+  process.on(signal, () => {
+    if (stopping) return;
+    stopping = true;
+    activeChild?.kill(signal);
+    releaseAdminLock().finally(() =>
+      process.exit(signal === "SIGINT" ? 130 : 143),
+    );
+  });
 try {
   if (["init", "add", "render", "start", "stop"].includes(command)) {
     await mkdir(dir, { recursive: true, mode: 0o700 });
@@ -154,8 +174,5 @@ try {
   );
   process.exitCode = 1;
 } finally {
-  if (adminLock) {
-    await adminLock.close();
-    await unlink(path.join(dir, ".admin.lock"));
-  }
+  await releaseAdminLock();
 }
