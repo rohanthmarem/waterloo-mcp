@@ -47,7 +47,7 @@ try {
   }));
   await new Promise((r) => app.listen(0, "127.0.0.1", r));
   config.origin = "http://127.0.0.1:" + app.address().port;
-  browser = await chromium.launch();
+  browser = await chromium.launch({ channel: "chromium" });
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1100 },
   });
