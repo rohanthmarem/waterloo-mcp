@@ -241,7 +241,7 @@ try {
         action: stopping
           ? "The command was interrupted. Its admin lock is released after the active operation stops."
           : error.message === "HOST_RACKET_START_FAILED"
-            ? "The MCP services started, but an optional Racket runner failed. Check that runner image and retry host start; existing MCP services remain available."
+            ? "The MCP services started, but an optional Racket runner failed. Check that runner image and retry host start; existing MCP services remain available. Run host audit --running to inspect the services that started."
             : "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
       },
     }),

@@ -71,7 +71,25 @@ try {
     .fill(
       "(define (square x) (* x x))\n(check-expect (square 4) 16)\n(check-expect (square -3) 9)",
     );
+  let holdPoll = false,
+    pollCaptured,
+    releasePoll,
+    pollDelivered;
   await page.route("**/racket/api", async (route) => {
+    if (
+      holdPoll &&
+      route.request().postDataJSON()?.name === "read_racket_workspace"
+    ) {
+      holdPoll = false;
+      const response = await route.fetch();
+      pollCaptured();
+      await new Promise((r) => {
+        releasePoll = r;
+      });
+      await route.fulfill({ response });
+      pollDelivered();
+      return;
+    }
     if (route.request().postDataJSON()?.name === "save_racket_workspace")
       await new Promise((r) => setTimeout(r, 300));
     await route.continue();
@@ -202,6 +220,47 @@ try {
     document
       .getElementById("run-status")
       .textContent.includes("Revision 2 · completed"),
+  );
+  // Delay an old poll until AFTER a newer save response. It must not revert the editor.
+  const captured = new Promise((r) => {
+    pollCaptured = r;
+  });
+  const delivered = new Promise((r) => {
+    pollDelivered = r;
+  });
+  await page.bringToFront();
+  holdPoll = true;
+  await captured;
+  await page
+    .getByLabel("Racket program")
+    .fill(update.code + "\n; Latest student revision");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.waitForFunction(() =>
+    document
+      .getElementById("revision")
+      .textContent.includes("Revision 3 · saved"),
+  );
+  releasePoll();
+  await delivered;
+  await page.evaluate(
+    () =>
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
+  assert(
+    (await page.locator("#revision").textContent()).includes(
+      "Revision 3 · saved",
+    ),
+  );
+  assert(
+    (await page.getByLabel("Racket program").inputValue()).includes(
+      "Latest student revision",
+    ),
+  );
+  await page.getByRole("button", { name: "Run saved code" }).click();
+  await page.waitForFunction(() =>
+    document
+      .getElementById("run-status")
+      .textContent.includes("Revision 3 · completed"),
   );
   if (process.env.RACKET_SCREENSHOT)
     await page.screenshot({

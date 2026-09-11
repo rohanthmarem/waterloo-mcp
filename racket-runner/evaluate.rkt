@@ -12,7 +12,12 @@
                   'htdp/asl 'lang/htdp-advanced)
             language language))
 ;; Never use a trusted sandbox configuration. Readers and language are fixed.
-(with-handlers ([exn:fail:resource?
+(with-handlers ([exn:fail:sandbox-terminated?
+                 (lambda (e)
+                   (if (eq? (exn:fail:sandbox-terminated-reason e) 'out-of-memory)
+                       (begin (displayln "Evaluation memory limit exceeded." (current-error-port)) (exit 125))
+                       (raise e)))]
+                [exn:fail:resource?
                  (lambda (e)
                    (define timed-out? (eq? (exn:fail:resource-resource e) 'time))
                    (displayln (if timed-out? "Evaluation time limit exceeded." "Evaluation memory limit exceeded.") (current-error-port))

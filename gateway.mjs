@@ -1,4 +1,5 @@
 import http from "node:http";
+import { ZodError } from "zod";
 import {
   RacketWorkspace,
   RacketError,
@@ -226,7 +227,12 @@ export function createGateway(
             return httpError(res, "ORIGIN_REJECTED");
           try {
             const value = JSON.parse(await body(req));
-            if (!Object.hasOwn(racketSchemas, value.name))
+            if (
+              !value ||
+              typeof value !== "object" ||
+              typeof value.name !== "string" ||
+              !Object.hasOwn(racketSchemas, value.name)
+            )
               return httpError(res, "INPUT_INVALID");
             const args = racketSchemas[value.name].parse(value.args);
             return reply(res, 200, await racket.call(value.name, args));
@@ -237,7 +243,9 @@ export function createGateway(
                 ? e.code
                 : e.message === "REQUEST_TOO_LARGE"
                   ? e.message
-                  : "INPUT_INVALID",
+                  : e instanceof ZodError || e instanceof SyntaxError
+                    ? "INPUT_INVALID"
+                    : "RACKET_STORAGE_UNAVAILABLE",
             );
           }
         }
@@ -525,9 +533,11 @@ export function createGateway(
           return toolError(
             error instanceof RacketError
               ? error.code
-              : error.message === "SERVICE_BUSY"
-                ? "SERVICE_BUSY"
-                : "UPSTREAM_UNAVAILABLE",
+              : Object.hasOwn(racketSchemas, name)
+                ? "RACKET_STORAGE_UNAVAILABLE"
+                : error.message === "SERVICE_BUSY"
+                  ? "SERVICE_BUSY"
+                  : "UPSTREAM_UNAVAILABLE",
           );
         }
       });

@@ -12,7 +12,7 @@ npm run host -- start
 npm run host -- audit --running
 ```
 
-For an existing profile, set `"racket": true` on that user in `private/hosting/host.json`, then run `npm run host -- render` and `npm run host -- start`. The setting is off by default. Startup brings up the MCP first, then the optional runners. If a runner fails to build or start, the MCP remains available and runner calls report an error. Turning it off removes Racket tools from the catalog but preserves saved workspaces.
+For an existing profile, set `"racket": true` on that user in `private/hosting/host.json`, then run `npm run host -- render` and `npm run host -- start`. The setting is off by default. Startup brings up the MCP first, then the optional runners. If a runner fails to build or start, the MCP remains available and runner calls report an error. Run `host audit --running` to inspect the services that started. Turning it off removes Racket tools from the catalog but preserves saved workspaces.
 
 Each enabled user gets an additional runner container. It has no school credentials, host filesystem mounts, Docker socket, or published ports. It connects only to that user's MCP over an internal Docker network. Do not expose the runner publicly. The host audit checks its mounts, process settings, resource limits, and internal network.
 
@@ -79,6 +79,7 @@ The runtime and Docker provide layered restrictions, not proof against every san
 - `RACKET_BUSY`: wait for the active operation. After a crash, an administrator must verify that no operation is running before removing a stale workspace `.lock` file.
 - `RACKET_NOT_FOUND`: list workspaces or create a new one with revision zero.
 - `RACKET_STATE_INVALID`: list results identify unreadable workspace IDs while keeping other workspaces available. Restore the matching encrypted file and user key; do not overwrite unreadable data.
+- `RACKET_STORAGE_UNAVAILABLE`: check disk space and file permissions; preserve existing workspace files.
 - `RACKET_UNAVAILABLE`: check the runner container and private network.
 - `RACKET_WORKSPACE_LIMIT`: reuse an existing workspace after preserving needed work.
 - Run results may contain `RACKET_PROGRAM_ERROR`, `RACKET_TIME_LIMIT`, `RACKET_MEMORY_LIMIT`, or `RACKET_OUTPUT_LIMIT`. Inspect the bounded output for details.

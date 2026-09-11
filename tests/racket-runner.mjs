@@ -96,4 +96,7 @@ assert.match(r.stderr, /Evaluation time limit exceeded/);
 r = await run('(let loop () (display "output flood") (loop))');
 assert.equal(r.code, "RACKET_OUTPUT_LIMIT");
 assert(Buffer.byteLength(r.stdout + r.stderr) <= 32768);
+r = await run("(let loop ([xs '()]) (loop (cons (make-bytes 16777216) xs)))");
+assert.equal(r.code, "RACKET_MEMORY_LIMIT", JSON.stringify(r));
+assert.match(r.stderr, /Evaluation memory limit exceeded/);
 console.log("RACKET_RUNNER_PASSED");

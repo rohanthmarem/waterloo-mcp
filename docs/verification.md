@@ -1,4 +1,17 @@
-# Verification for 0.4.0
+# Racket feature verification
+
+Checked on 2026-09-11 with synthetic accounts and assignments.
+
+- 32 application tests and 411 library tests passed locally. CI also exercises the four browser checkout fixtures.
+- The isolated runner passed on Linux ARM64 under Colima on macOS. All five teaching languages ran `check-expect` programs. Failed teaching tests were visible in output. File, network, subprocess, unsafe FFI, and reader checks required explicit access-denial errors. The evaluator timeout returned `RACKET_TIME_LIMIT`, memory exhaustion returned `RACKET_MEMORY_LIMIT`, and output flooding stopped at 32 KiB.
+- Two users ran separate MCP and Racket containers. Both users read only their own saved assignment/code and ran their own program. Cross-user credentials were rejected. All 27 runtime isolation checks passed, and each MCP retained its non-internal default route.
+- Real Chromium verified owner login, assignment display, code save/run, MCP reads, owner-approved MCP edits and runs, busy retry without consuming approval, preserved unsaved edits, revision conflicts, late-response protection after a newer save, and reload. The page was also loaded from the actual built image.
+- A simulated optional-runner startup failure happened only after the MCP start succeeded. Shutdown tests verify that a second admin command remains blocked until the first Docker process exits.
+- Claude Code using `claude-fable-5-1` reviewed both the hosting and Racket changes. Review findings led to login/shutdown fixes, deferred Racket approval consumption, runner startup separation, clearer errors, and editor protection.
+
+The Mac browser download did not complete; the real browser workflow was tested in the local Linux container. No real course assignment, new Waterloo login, or production deployment was used. Full DrRacket, graphical output, arbitrary packages, and Windows hosting were not tested or added.
+
+## Hosting release 0.4.0
 
 Checked on 2026-09-11 with synthetic accounts. The existing production installation was kept separate.
 

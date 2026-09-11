@@ -1,6 +1,12 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  RACKET_STORAGE_UNAVAILABLE: [
+    503,
+    "Workspace storage could not be read or written.",
+    "Check disk space and permissions for this user’s private Racket directory. Preserve existing files.",
+    false,
+  ],
   RACKET_DISABLED: [
     404,
     "The Racket workspace is not enabled.",

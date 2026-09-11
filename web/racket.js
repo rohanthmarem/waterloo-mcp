@@ -182,9 +182,10 @@ window.addEventListener("beforeunload", (e) => {
 setInterval(async () => {
   if (!current || busy) return;
   try {
-    const polledId = current.id;
+    const polled = current;
+    const polledId = polled.id;
     const value = await call("read_racket_workspace", { id: polledId });
-    if (busy || !current || current.id !== polledId) return;
+    if (busy || current !== polled) return;
     if (
       value.revision !== current.revision ||
       value.lastRun?.at !== current.lastRun?.at
