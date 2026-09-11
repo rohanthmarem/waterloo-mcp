@@ -1,4 +1,10 @@
 import http from "node:http";
+import {
+  RacketWorkspace,
+  RacketError,
+  racketSchemas,
+  racketTools,
+} from "./src/racket-workspace.mjs";
 import { PortableAuth } from "./src/portable-auth.mjs";
 import { importSession } from "./src/import-session.mjs";
 import { readFile, writeFile, rename } from "node:fs/promises";
@@ -76,6 +82,7 @@ export function createGateway(
     piazzaSession = new PiazzaSession(config),
   } = {},
 ) {
+  const racket = new RacketWorkspace(config);
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
   const piazza = new Piazza(piazzaSession);
@@ -101,7 +108,7 @@ export function createGateway(
         const loginUrl = new URL(req.url, config.origin);
         const requestedNext = loginUrl.searchParams.get("next");
         const ownerPath = (value) =>
-          /^\/(?:connection|setup(?:\/piazza)?|approvals\/[a-f0-9]{32,128})$/.test(
+          /^\/(?:racket|connection|setup(?:\/piazza)?|approvals\/[a-f0-9]{32,128})$/.test(
             value ?? "",
           );
         const next = ownerPath(requestedNext) ? requestedNext : "/connection";
@@ -192,6 +199,46 @@ export function createGateway(
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (req.url.startsWith("/racket")) {
+        if (!racket.enabled()) return httpError(res, "RACKET_DISABLED");
+        const files = {
+          "/racket": ["racket.html", "text/html"],
+          "/racket/style.css": ["racket.css", "text/css"],
+          "/racket/app.js": ["racket.js", "text/javascript"],
+        };
+        if (req.method === "GET" && Object.hasOwn(files, req.url)) {
+          const [file, type] = files[req.url];
+          const content = await readFile(path.join(root, "web", file));
+          res.writeHead(200, {
+            "Content-Type": type + "; charset=utf-8",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy":
+              "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+          });
+          return res.end(content);
+        }
+        if (req.url === "/racket/api" && req.method === "POST") {
+          if (
+            req.headers.origin !== config.origin ||
+            !req.headers["content-type"]?.startsWith("application/json")
+          )
+            return httpError(res, "ORIGIN_REJECTED");
+          try {
+            const value = JSON.parse(await body(req));
+            if (!Object.hasOwn(racketSchemas, value.name))
+              return httpError(res, "INPUT_INVALID");
+            const args = racketSchemas[value.name].parse(value.args);
+            return reply(res, 200, await racket.call(value.name, args));
+          } catch (e) {
+            return httpError(
+              res,
+              e instanceof RacketError ? e.code : "INPUT_INVALID",
+            );
+          }
+        }
+        return httpError(res, "NOT_FOUND");
+      }
       if (req.url === "/account" && req.method === "GET")
         return reply(res, 200, {
           username: config.username,
@@ -298,7 +345,7 @@ export function createGateway(
         return reply(
           res,
           200,
-          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
+          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p>${racket.enabled() ? '<h2>Racket</h2><p><a href="/racket">Open your assignment and code workspace</a></p>' : ""}<h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
           "text/html; charset=utf-8",
         );
       if (req.url === "/setup" && req.method === "POST") {
@@ -364,6 +411,7 @@ export function createGateway(
           outlineTool,
           ...roomTools,
           ...piazzaTools,
+          ...(racket.enabled() ? racketTools : []),
         ]
           .filter((t) => KNOWN_TOOLS.has(t.name))
           .map(describeTool),
@@ -374,6 +422,14 @@ export function createGateway(
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
+        if (Object.hasOwn(racketSchemas, name)) {
+          if (!racket.enabled()) return toolError("RACKET_DISABLED");
+          try {
+            args = racketSchemas[name].parse(args);
+          } catch {
+            return toolError("INPUT_INVALID");
+          }
+        }
         if (roomSchemas[name]) {
           try {
             args = parseRoomArgs(name, args);
@@ -417,26 +473,37 @@ export function createGateway(
         try {
           const run = async () =>
             normalizeToolResult(
-              Object.hasOwn(piazzaSchemas, name)
-                ? await piazza.call(name, args)
-                : roomSchemas[name]
-                  ? await libcal.call(name, args)
-                  : name === "get_course_outline"
-                    ? await getCourseOutline(await client(), args)
-                    : await (
-                        await client()
-                      ).callTool({ name, arguments: args }, undefined, {
-                        timeout: 180000,
-                      }),
+              Object.hasOwn(racketSchemas, name)
+                ? {
+                    content: [
+                      {
+                        type: "text",
+                        text: JSON.stringify(await racket.call(name, args)),
+                      },
+                    ],
+                  }
+                : Object.hasOwn(piazzaSchemas, name)
+                  ? await piazza.call(name, args)
+                  : roomSchemas[name]
+                    ? await libcal.call(name, args)
+                    : name === "get_course_outline"
+                      ? await getCourseOutline(await client(), args)
+                      : await (
+                          await client()
+                        ).callTool({ name, arguments: args }, undefined, {
+                          timeout: 180000,
+                        }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
             : await run();
         } catch (error) {
           return toolError(
-            error.message === "SERVICE_BUSY"
-              ? "SERVICE_BUSY"
-              : "UPSTREAM_UNAVAILABLE",
+            error instanceof RacketError
+              ? error.code
+              : error.message === "SERVICE_BUSY"
+                ? "SERVICE_BUSY"
+                : "UPSTREAM_UNAVAILABLE",
           );
         }
       });

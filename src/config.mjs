@@ -34,7 +34,22 @@ export function readConfig(env = process.env) {
   const port = Number(env.PORT ?? 8000);
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error("CONFIG_INVALID");
+  const racketUrl = env.WATERLOO_RACKET_URL;
+  if (racketUrl) {
+    const u = new URL(racketUrl);
+    if (
+      u.protocol !== "http:" ||
+      u.pathname !== "/" ||
+      u.search ||
+      u.hash ||
+      u.username ||
+      u.password ||
+      !/^(localhost|127\.0\.0\.1|racket_[a-z][a-z0-9-]{0,31})$/.test(u.hostname)
+    )
+      throw new Error("CONFIG_INVALID");
+  }
   return {
+    racketUrl: racketUrl ? new URL(racketUrl).origin : null,
     home,
     authMode,
     origin: origin.origin,

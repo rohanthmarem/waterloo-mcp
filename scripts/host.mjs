@@ -45,7 +45,21 @@ async function runningAudit() {
         ).stdout,
       )
     : [];
-  const report = await auditRunningHost(dir, containers);
+  const networkIds = [
+    ...new Set(
+      containers.flatMap((c) =>
+        Object.values(c.NetworkSettings.Networks).map((n) => n.NetworkID),
+      ),
+    ),
+  ];
+  if (networkIds.some((id) => !/^[a-f0-9]{12,64}$/.test(id)))
+    throw new Error("HOST_INSPECT_FAILED");
+  const networks = networkIds.length
+    ? JSON.parse(
+        (await capture("docker", ["network", "inspect", ...networkIds])).stdout,
+      )
+    : [];
+  const report = await auditRunningHost(dir, containers, root, networks);
   console.log(JSON.stringify(report));
   if (!report.passed) throw new Error("HOST_ISOLATION_FAILED");
 }
@@ -82,6 +96,7 @@ try {
           owner: flags.owner,
           username: flags.username,
           port: Number(flags.port),
+          racket: args.includes("--racket"),
         }),
       ),
     );

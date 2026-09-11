@@ -1,6 +1,48 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  RACKET_DISABLED: [
+    404,
+    "The Racket workspace is not enabled.",
+    "Add --racket for this user during host setup, or enable racket in the host manifest and render/start again.",
+    false,
+  ],
+  RACKET_NOT_FOUND: [
+    404,
+    "The workspace does not exist.",
+    "List workspaces, or create it with expectedRevision 0.",
+    false,
+  ],
+  RACKET_STATE_INVALID: [
+    500,
+    "The encrypted workspace could not be read.",
+    "Restore this user’s workspace and matching encryption key. Do not overwrite unreadable state.",
+    false,
+  ],
+  RACKET_REVISION_CONFLICT: [
+    409,
+    "The saved code changed since you read it.",
+    "Read the latest revision and combine the edits. Request a new approval for changed arguments.",
+    false,
+  ],
+  RACKET_BUSY: [
+    409,
+    "This workspace or runner is busy.",
+    "Wait for the current operation. If a lock remains after a crash, have the host administrator check it before removing it.",
+    true,
+  ],
+  RACKET_UNAVAILABLE: [
+    503,
+    "The isolated Racket runner could not be reached.",
+    "Check the per-user runner container. Code is never executed inside the MCP server as a fallback.",
+    true,
+  ],
+  RACKET_WORKSPACE_LIMIT: [
+    400,
+    "This user has reached the 50-workspace limit.",
+    "Reuse an existing workspace after preserving any code you need.",
+    false,
+  ],
   HOST_REJECTED: [
     400,
     "The request hostname does not match this instance.",

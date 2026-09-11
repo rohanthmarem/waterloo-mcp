@@ -18,6 +18,7 @@ COPY requirements-transcription.lock /tmp/requirements-transcription.lock
 RUN python3 -m venv /opt/transcription && /opt/transcription/bin/pip install --no-cache-dir -r /tmp/requirements-transcription.lock
 COPY upstream/package.json ./upstream/package.json
 COPY --from=build /app/upstream/build ./upstream/build
+COPY web ./web
 COPY src ./src
 COPY scripts ./scripts
 COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs renew.mjs transcribe.py ./

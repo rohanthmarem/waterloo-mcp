@@ -22,6 +22,7 @@ const userSchema = z
     owner: z.string().email(),
     username: z.string().regex(/^[a-z0-9._-]+@uwaterloo\.ca$/i),
     port: z.number().int().min(1024).max(65535),
+    racket: z.boolean().default(false),
   })
   .strict();
 const manifestSchema = z
@@ -135,6 +136,42 @@ export function composeFor(dir, manifest, sourceRoot = root) {
       cap_drop: ["ALL"],
       networks: [u.id],
     };
+    if (u.racket) {
+      const runner = "racket_" + u.id,
+        network = u.id + "_racket";
+      networks[network] = { internal: true };
+      services[u.id].environment.WATERLOO_RACKET_URL =
+        "http://" + runner + ":8010";
+      services[u.id].networks.push(network);
+      services[u.id].depends_on = {
+        [runner]: { condition: "service_healthy" },
+      };
+      services[runner] = {
+        build: { context: path.join(sourceRoot, "racket-runner") },
+        restart: "unless-stopped",
+        init: true,
+        user: "65534:65534",
+        read_only: true,
+        tmpfs: ["/tmp:size=32m,mode=1777"],
+        mem_limit: "512m",
+        cpus: 1,
+        pids_limit: 64,
+        cap_drop: ["ALL"],
+        security_opt: ["no-new-privileges:true"],
+        networks: [network],
+        healthcheck: {
+          test: [
+            "CMD",
+            "python3",
+            "-c",
+            "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8010/health', timeout=2)",
+          ],
+          interval: "10s",
+          timeout: "3s",
+          retries: 5,
+        },
+      };
+    }
   }
   return {
     name:
@@ -367,7 +404,12 @@ export async function auditHost(dir, sourceRoot = root) {
   };
 }
 
-export async function auditRunningHost(dir, containers, sourceRoot = root) {
+export async function auditRunningHost(
+  dir,
+  containers,
+  sourceRoot = root,
+  networks = [],
+) {
   const m = await loadHost(dir),
     expected = composeFor(dir, m, sourceRoot),
     findings = [];
@@ -376,11 +418,18 @@ export async function auditRunningHost(dir, containers, sourceRoot = root) {
     checks++;
     if (!ok) findings.push({ code, users: id ? [id] : [] });
   };
-  check("EXACT_RUNNING_USER_COUNT", containers.length === m.users.length);
-  for (const u of m.users) {
+  check(
+    "EXACT_RUNNING_USER_COUNT",
+    containers.length === Object.keys(expected.services).length,
+  );
+  for (const [serviceId, service] of Object.entries(expected.services)) {
+    const u = m.users.find(
+      (u) => serviceId === u.id || serviceId === "racket_" + u.id,
+    );
+    const isRunner = serviceId !== u.id;
     const matches = containers.filter(
       (c) =>
-        c.Config?.Labels?.["com.docker.compose.service"] === u.id &&
+        c.Config?.Labels?.["com.docker.compose.service"] === serviceId &&
         c.Config.Labels["com.docker.compose.project"] === expected.name,
     );
     check(
@@ -389,9 +438,18 @@ export async function auditRunningHost(dir, containers, sourceRoot = root) {
       u.id,
     );
     if (matches.length !== 1) continue;
+    if (isRunner)
+      check(
+        "RACKET_INTERNAL_NETWORK",
+        networks.some(
+          (n) =>
+            n.Name === expected.name + "_" + u.id + "_racket" &&
+            n.Internal === true,
+        ),
+        u.id,
+      );
     const c = matches[0],
-      h = c.HostConfig,
-      service = expected.services[u.id];
+      h = c.HostConfig;
     check(
       "UNPRIVILEGED_PROCESS",
       !h.Privileged &&
@@ -406,8 +464,8 @@ export async function auditRunningHost(dir, containers, sourceRoot = root) {
     const mounts = c.Mounts.filter((v) => v.Type !== "tmpfs");
     check(
       "EXACT_PRIVATE_MOUNTS",
-      mounts.length === 2 &&
-        service.volumes.every((v) =>
+      mounts.length === (service.volumes ?? []).length &&
+        (service.volumes ?? []).every((v) =>
           mounts.some(
             (p) =>
               p.Type === "bind" &&
@@ -423,18 +481,26 @@ export async function auditRunningHost(dir, containers, sourceRoot = root) {
       !h.PidMode &&
         !h.UTSMode &&
         h.IpcMode !== "host" &&
-        h.NetworkMode === expected.name + "_" + u.id &&
-        Object.keys(c.NetworkSettings.Networks).length === 1,
+        service.networks.some(
+          (n) => h.NetworkMode === expected.name + "_" + n,
+        ) &&
+        Object.keys(c.NetworkSettings.Networks).length ===
+          service.networks.length &&
+        service.networks.every((n) =>
+          Object.hasOwn(c.NetworkSettings.Networks, expected.name + "_" + n),
+        ),
       u.id,
     );
     const bindings = h.PortBindings ?? {},
       ports = bindings["8000/tcp"] ?? [];
     check(
       "LOOPBACK_ONLY_PORT",
-      Object.keys(bindings).length === 1 &&
-        ports.length === 1 &&
-        ports[0].HostIp === "127.0.0.1" &&
-        ports[0].HostPort === String(u.port),
+      isRunner
+        ? Object.keys(bindings).length === 0
+        : Object.keys(bindings).length === 1 &&
+            ports.length === 1 &&
+            ports[0].HostIp === "127.0.0.1" &&
+            ports[0].HostPort === String(u.port),
       u.id,
     );
     check(
