@@ -25,6 +25,7 @@ const flags = Object.fromEntries(
 const dir = hostingDir();
 const capture = promisify(execFile);
 async function runningAudit() {
+  if (stopping) throw new Error("HOST_INTERRUPTED");
   const { stdout } = await capture("docker", [
     "compose",
     "-f",
@@ -64,34 +65,54 @@ async function runningAudit() {
   if (!report.passed) throw new Error("HOST_ISOLATION_FAILED");
 }
 let activeChild;
+let stopping;
 const run = (command, args, env = process.env) =>
   new Promise((resolve, reject) => {
-    const child = spawn(command, args, { stdio: "inherit", env });
+    if (stopping) return reject(new Error("HOST_INTERRUPTED"));
+    const child = spawn(command, args, {
+      stdio: "inherit",
+      env,
+      detached: command === "docker",
+    });
     activeChild = child;
     child.on("error", reject);
-    child.on("exit", (code) =>
-      code === 0 ? resolve() : reject(new Error("HOST_COMMAND_FAILED")),
-    );
+    child.on("exit", (code) => {
+      if (activeChild === child) activeChild = undefined;
+      code === 0 ? resolve() : reject(new Error("HOST_COMMAND_FAILED"));
+    });
   });
-let adminLock;
-async function releaseAdminLock() {
-  const lock = adminLock;
-  adminLock = undefined;
-  if (lock) {
-    await lock.close();
-    await unlink(path.join(dir, ".admin.lock"));
-  }
+let adminLock, releasePromise;
+function releaseAdminLock() {
+  return (releasePromise ??= (async () => {
+    if (adminLock) {
+      await adminLock.close();
+      await unlink(path.join(dir, ".admin.lock"));
+      adminLock = undefined;
+    }
+  })());
 }
-let stopping = false;
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, () => {
     if (stopping) return;
-    stopping = true;
-    activeChild?.kill(signal);
-    releaseAdminLock().finally(() =>
-      process.exit(signal === "SIGINT" ? 130 : 143),
-    );
+    stopping = signal;
+    const child = activeChild;
+    if (!child) return; // Let an in-progress file operation finish before finally unlocks.
+    const terminate = (signal) => {
+      try {
+        if (child.spawnfile === "docker") process.kill(-child.pid, signal);
+        else child.kill(signal);
+      } catch (e) {
+        if (e.code !== "ESRCH") throw e;
+      }
+    };
+    terminate(signal);
+    const timer = setTimeout(() => {
+      if (activeChild === child) terminate("SIGKILL");
+    }, 5000);
+    timer.unref();
+    // Do not exit or unlock here: run() must observe child exit, then finally unlocks.
   });
+
 try {
   if (["init", "add", "render", "start", "stop"].includes(command)) {
     await mkdir(dir, { recursive: true, mode: 0o700 });
@@ -190,4 +211,5 @@ try {
   process.exitCode = 1;
 } finally {
   await releaseAdminLock();
+  if (stopping) process.exitCode = stopping === "SIGINT" ? 130 : 143;
 }
