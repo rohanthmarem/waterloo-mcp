@@ -239,7 +239,8 @@ test("two real HTTP MCP instances isolate tokens, owner cookies, read caches, ap
     const auth = new PortableAuth(a.config);
     for (let i = 0; i < 10; i++)
       await assert.rejects(auth.login("wrong"), /AUTH_REQUIRED/);
-    await assert.rejects(auth.login(a.owner), /LOGIN_RATE_LIMITED/);
+    await assert.rejects(auth.login("wrong"), /LOGIN_RATE_LIMITED/);
+    assert.match(await auth.login("  " + a.owner + "\n"), /waterloo_owner=/);
     const owner = await auth.owner();
     const expired = Buffer.from(
       JSON.stringify({ exp: Date.now() - 1 }),

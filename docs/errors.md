@@ -60,4 +60,4 @@ Command-line diagnostics also use these codes:
 
 `doctor` prints named checks with `ok`, `needs_action`, or `info` and exits nonzero when a required local check fails. It does not make network requests.
 
-Portable host commands also report `HOST_SINGLE_USER_LIMIT`, `HOST_SHARED_COOKIE_HOST`, `HOST_DUPLICATE_USER_CONFIG`, `HOST_ADMIN_BUSY`, `HOST_ISOLATION_FAILED`, `HOST_USER_NOT_FOUND`, and `HOST_SETUP_FAILED`. Check the reported audit findings before starting. Do not delete a lock unless its owning command has stopped. A partial setup is preserved for inspection; the CLI never overwrites an existing profile. Owner-key rotation failures report `OWNER_ROTATION_FAILED`.
+Portable host commands also report `HOST_SINGLE_USER_LIMIT`, `HOST_LOCAL_PORT_MISMATCH`, `HOST_SHARED_COOKIE_HOST`, `HOST_DUPLICATE_USER_CONFIG`, `HOST_ADMIN_BUSY`, `HOST_ISOLATION_FAILED`, `HOST_USER_NOT_FOUND`, and `HOST_SETUP_FAILED`. Check the reported audit findings before starting. Do not delete a lock unless its owning command has stopped. A partial setup is preserved for inspection; the CLI never overwrites an existing profile. Owner-key rotation failures report `OWNER_ROTATION_FAILED`.

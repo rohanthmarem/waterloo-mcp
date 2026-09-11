@@ -36,19 +36,29 @@ const manifestSchema = z
   .strict();
 export const hostingDir = (base = root) => path.join(base, "private/hosting");
 export const userHome = (dir, id) => path.join(dir, "users", userId.parse(id));
+function validateLocalPort(u) {
+  const origin = new URL(u.origin);
+  if (
+    ["localhost", "127.0.0.1"].includes(origin.hostname) &&
+    Number(origin.port || (origin.protocol === "https:" ? 443 : 80)) !== u.port
+  )
+    throw new Error("HOST_LOCAL_PORT_MISMATCH");
+}
 export async function loadHost(dir) {
   const m = manifestSchema.parse(
     JSON.parse(await readFile(path.join(dir, "host.json"), "utf8")),
   );
   if (m.mode === "single" && m.users.length > 1)
     throw new Error("HOST_SINGLE_USER_LIMIT");
-  for (const u of m.users)
+  for (const u of m.users) {
+    validateLocalPort(u);
     readConfig({
       WATERLOO_AUTH_MODE: "portable",
       WATERLOO_ORIGIN: u.origin,
       WATERLOO_OWNER_EMAIL: u.owner,
       D2L_USERNAME: u.username,
     });
+  }
   for (const field of ["id", "port", "origin", "owner", "username"])
     if (
       new Set(m.users.map((u) => String(u[field]).toLowerCase())).size !==
@@ -96,6 +106,10 @@ export function composeFor(dir, manifest, sourceRoot = root) {
     networks[u.id] = {};
     services[u.id] = {
       build: { context: sourceRoot },
+      image:
+        "waterloo-host-" +
+        createHash("sha256").update(dir).digest("hex").slice(0, 10) +
+        "-mcp",
       restart: "unless-stopped",
       init: true,
       user: `${manifest.uid}:${manifest.gid}`,
@@ -208,6 +222,7 @@ export async function addHostUser(dir, input, sourceRoot = root) {
     D2L_USERNAME: u.username,
   });
   u.origin = config.origin;
+  validateLocalPort(u);
   u.owner = u.owner.toLowerCase();
   u.username = u.username.toLowerCase();
   if (

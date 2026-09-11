@@ -69,6 +69,10 @@ test("single-user mode refuses a second user; multi-user mode rejects shared coo
       addHostUser(dir, { ...bob, username: alice.username }),
       /HOST_DUPLICATE_USER_CONFIG/,
     );
+    await assert.rejects(
+      addHostUser(dir, { ...bob, origin: "http://localhost:8001" }),
+      /HOST_LOCAL_PORT_MISMATCH/,
+    );
     await addHostUser(dir, bob);
     assert.equal((await loadHost(dir)).users.length, 2);
     await assert.rejects(addHostUser(dir, bob), /HOST_DUPLICATE_USER_CONFIG/);

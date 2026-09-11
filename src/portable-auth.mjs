@@ -60,12 +60,13 @@ export class PortableAuth {
   }
   async login(token) {
     this.failures = this.failures.filter((t) => t > Date.now() - 60000);
-    if (this.failures.length >= 10) throw new Error("LOGIN_RATE_LIMITED");
     const owner = await this.owner();
+    if (typeof token === "string") token = token.trim();
     if (
       typeof token !== "string" ||
       !equal(tokenHash(token), owner.tokenHash)
     ) {
+      if (this.failures.length >= 10) throw new Error("LOGIN_RATE_LIMITED");
       this.failures.push(Date.now());
       throw new Error("AUTH_REQUIRED");
     }
