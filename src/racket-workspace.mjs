@@ -8,6 +8,7 @@ import {
   unlink,
 } from "node:fs/promises";
 import path from "node:path";
+import { createHash } from "node:crypto";
 import { z } from "zod";
 import { encrypt, decrypt } from "../upstream/build/auth/encrypted-store.js";
 
@@ -95,32 +96,56 @@ export class RacketWorkspace {
     return Boolean(this.config.racketUrl);
   }
   async key() {
-    return Buffer.from(
-      (
+    try {
+      const text = (
         await readFile(path.join(this.config.secretsDir, "session-key"), "utf8")
-      ).trim(),
-      "hex",
-    );
+      ).trim();
+      if (!/^[a-f0-9]{64}$/.test(text)) throw new Error();
+      return Buffer.from(text, "hex");
+    } catch {
+      throw new RacketError("RACKET_STATE_INVALID");
+    }
   }
   file(name) {
     return path.join(this.dir, id.parse(name) + ".json");
   }
   async read(name) {
+    let file;
     try {
-      const file = await readFile(this.file(name), "utf8");
-      const key = await this.key();
-      try {
-        return JSON.parse(
-          decrypt(JSON.parse(file), key, "waterloo-racket:v1:" + name),
-        );
-      } finally {
-        key.fill(0);
-      }
+      file = await readFile(this.file(name), "utf8");
     } catch (e) {
       throw new RacketError(
         e.code === "ENOENT" ? "RACKET_NOT_FOUND" : "RACKET_STATE_INVALID",
       );
     }
+    const key = await this.key();
+    try {
+      return JSON.parse(
+        decrypt(JSON.parse(file), key, "waterloo-racket:v1:" + name),
+      );
+    } catch {
+      throw new RacketError("RACKET_STATE_INVALID");
+    } finally {
+      key.fill(0);
+    }
+  }
+  async preview(name, args) {
+    const value =
+      name === "run_racket_workspace" ? await this.read(args.id) : args;
+    if (
+      name === "run_racket_workspace" &&
+      value.revision !== args.expectedRevision
+    )
+      throw new RacketError("RACKET_REVISION_CONFLICT");
+    return {
+      workspace: args.id,
+      revision: args.expectedRevision,
+      language: value.language,
+      sourceCode: value.code,
+      sha256: createHash("sha256")
+        .update(value.language + "\n" + value.code)
+        .digest("hex"),
+    };
   }
   async write(value) {
     const key = await this.key();
@@ -138,9 +163,10 @@ export class RacketWorkspace {
       key.fill(0);
     }
   }
-  async locked(name, run) {
+  async locked(run) {
     await mkdir(this.dir, { recursive: true, mode: 0o700 });
-    const file = this.file(name) + ".lock";
+    // Serialize mutations per user, including runs of different workspaces.
+    const file = path.join(this.dir, ".write.lock");
     let lock;
     try {
       lock = await open(file, "wx", 0o600);
@@ -154,7 +180,7 @@ export class RacketWorkspace {
       await unlink(file);
     }
   }
-  async call(name, raw) {
+  async call(name, raw, authorize = async () => {}) {
     if (!this.enabled()) throw new RacketError("RACKET_DISABLED");
     const args = racketSchemas[name].parse(raw);
     if (name === "list_racket_workspaces") {
@@ -162,11 +188,21 @@ export class RacketWorkspace {
         if (e.code === "ENOENT") return [];
         throw e;
       });
-      const workspaces = [];
+      const workspaces = [],
+        unreadable = [];
       for (const file of files.filter((v) =>
         /^[a-z][a-z0-9-]{0,39}\.json$/.test(v),
       )) {
-        const value = await this.read(file.slice(0, -5));
+        let value;
+        try {
+          value = await this.read(file.slice(0, -5));
+        } catch {
+          unreadable.push({
+            id: file.slice(0, -5),
+            code: "RACKET_STATE_INVALID",
+          });
+          continue;
+        }
         workspaces.push({
           id: value.id,
           title: value.title,
@@ -175,10 +211,10 @@ export class RacketWorkspace {
           updatedAt: value.updatedAt,
         });
       }
-      return { workspaces };
+      return { workspaces, unreadable };
     }
     if (name === "read_racket_workspace") return this.read(args.id);
-    return this.locked(args.id, async () => {
+    return this.locked(async () => {
       let before;
       try {
         before = await this.read(args.id);
@@ -201,10 +237,29 @@ export class RacketWorkspace {
           updatedAt: new Date().toISOString(),
           lastRun: null,
         };
+        const key = await this.key();
+        key.fill(0);
+        await authorize();
         await this.write(value);
         return value;
       }
       if (!before) throw new RacketError("RACKET_NOT_FOUND");
+      // Check predictable failures before consuming the exact one-use approval.
+      try {
+        const health = await this.request(this.config.racketUrl + "/health", {
+          redirect: "error",
+          signal: AbortSignal.timeout(2000),
+        });
+        if (!health.ok) throw new RacketError("RACKET_UNAVAILABLE");
+        const state = await health.json();
+        if (state.busy) throw new RacketError("RACKET_BUSY");
+        if (!state.ready) throw new RacketError("RACKET_UNAVAILABLE");
+      } catch (e) {
+        throw e instanceof RacketError
+          ? e
+          : new RacketError("RACKET_UNAVAILABLE");
+      }
+      await authorize();
       let response;
       try {
         response = await this.request(this.config.racketUrl + "/run", {
@@ -224,16 +279,21 @@ export class RacketWorkspace {
         throw new RacketError(
           response.status === 503 ? "RACKET_BUSY" : "RACKET_UNAVAILABLE",
         );
-      const result = z
-        .object({
-          status: z.enum(["completed", "error"]),
-          code: z.string().nullable(),
-          stdout: z.string().max(32768),
-          stderr: z.string().max(32768),
-          durationMs: z.number().nonnegative(),
-        })
-        .strict()
-        .parse(await response.json());
+      let result;
+      try {
+        result = z
+          .object({
+            status: z.enum(["completed", "error"]),
+            code: z.string().nullable(),
+            stdout: z.string().max(32768),
+            stderr: z.string().max(32768),
+            durationMs: z.number().nonnegative(),
+          })
+          .strict()
+          .parse(await response.json());
+      } catch {
+        throw new RacketError("RACKET_UNAVAILABLE");
+      }
       before.lastRun = {
         ...result,
         revision: before.revision,

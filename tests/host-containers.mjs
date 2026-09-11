@@ -201,6 +201,31 @@ try {
       u.id + "-private-fixture",
     );
     if (u.racket) {
+      const container = containers.find(
+        (c) => c.Config.Labels["com.docker.compose.service"] === u.id,
+      );
+      const networkName =
+        container.Config.Labels["com.docker.compose.project"] + "_" + u.id;
+      const gateway = container.NetworkSettings.Networks[networkName].Gateway;
+      const expectedGateway = gateway
+        .split(".")
+        .reverse()
+        .map((v) => Number(v).toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+      await exec("docker", [
+        "exec",
+        container.Id,
+        "node",
+        "-e",
+        "const rows=require('node:fs').readFileSync('/proc/net/route','utf8').trim().split('\\n').slice(1).map(v=>v.trim().split(/\\s+/));process.exit(rows.some(v=>v[1]==='00000000' && v[2]===process.argv[1])?0:1)",
+        expectedGateway,
+      ]);
+      const page = await request(u.origin + "/racket", {
+        headers: { Authorization: "Bearer " + u.owner },
+      });
+      assert.equal(page.status, 200);
+      assert((await page.text()).includes("Racket workspace"));
       const doc = {
         id: "a01",
         title: u.id + " assignment",

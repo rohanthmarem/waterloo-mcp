@@ -44,7 +44,17 @@ async function call(name, args) {
   return data;
 }
 async function refreshList() {
-  const { workspaces } = await call("list_racket_workspaces", {});
+  const { workspaces, unreadable = [] } = await call(
+    "list_racket_workspaces",
+    {},
+  );
+  if (unreadable.length)
+    message(
+      "Some workspaces could not be decrypted: " +
+        unreadable.map((v) => v.id).join(", ") +
+        ". Other workspaces are available.",
+      true,
+    );
   const selected = current?.id ?? $("workspaces").value;
   $("workspaces").replaceChildren(
     new Option("Choose a workspace", ""),

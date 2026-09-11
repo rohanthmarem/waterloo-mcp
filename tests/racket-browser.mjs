@@ -1,3 +1,4 @@
+import { unlink } from "node:fs/promises";
 // Start a credential-free local runner first; see docs/racket.md.
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
@@ -180,6 +181,13 @@ try {
   await approval
     .getByRole("button", { name: "Approve this action once" })
     .click();
+  await writeFile(path.join(home, "racket/.write.lock"), "fixture");
+  const busyRun = await client.callTool({
+    name: "run_racket_workspace",
+    arguments: { ...runArgs, authorizationId: pendingRun.authorizationId },
+  });
+  assert.equal(JSON.parse(busyRun.content[0].text).error.code, "RACKET_BUSY");
+  await unlink(path.join(home, "racket/.write.lock"));
   const executed = await client.callTool({
     name: "run_racket_workspace",
     arguments: { ...runArgs, authorizationId: pendingRun.authorizationId },

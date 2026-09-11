@@ -158,9 +158,6 @@ export function composeFor(dir, manifest, sourceRoot = root) {
       services[u.id].environment.WATERLOO_RACKET_URL =
         "http://" + runner + ":8010";
       services[u.id].networks.push(network);
-      services[u.id].depends_on = {
-        [runner]: { condition: "service_healthy" },
-      };
       services[runner] = {
         build: { context: path.join(sourceRoot, "racket-runner") },
         restart: "unless-stopped",

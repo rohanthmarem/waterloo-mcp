@@ -1,3 +1,4 @@
+import { unlink } from "node:fs/promises";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
@@ -35,6 +36,8 @@ test("Racket workspace encrypts per-user code, rejects stale edits, and runs exa
     const service = new RacketWorkspace(
       configurations[0],
       async (url, options) => {
+        if (url.endsWith("/health"))
+          return { ok: true, json: async () => ({ ready: true, busy: false }) };
         runs++;
         assert.equal(url, "http://racket_alice:8010/run");
         assert.deepEqual(JSON.parse(options.body), {
@@ -55,6 +58,7 @@ test("Racket workspace encrypts per-user code, rejects stale edits, and runs exa
     );
     assert.deepEqual(await service.call("list_racket_workspaces", {}), {
       workspaces: [],
+      unreadable: [],
     });
     const saved = await service.call("save_racket_workspace", doc);
     assert.equal(saved.revision, 1);
@@ -72,6 +76,29 @@ test("Racket workspace encrypts per-user code, rejects stale edits, and runs exa
       /RACKET_REVISION_CONFLICT/,
     );
     assert.equal(runs, 0);
+    let approvals = 0;
+    const approve = async () => {
+      approvals++;
+    };
+    await writeFile(
+      path.join(configurations[0].stateDir, "racket/.write.lock"),
+      "fixture",
+    );
+    await assert.rejects(
+      service.call(
+        "run_racket_workspace",
+        { id: "a01", expectedRevision: 1 },
+        approve,
+      ),
+      /RACKET_BUSY/,
+    );
+    assert.equal(approvals, 0);
+    await unlink(path.join(configurations[0].stateDir, "racket/.write.lock"));
+    await assert.rejects(
+      service.call("save_racket_workspace", doc, approve),
+      /RACKET_REVISION_CONFLICT/,
+    );
+    assert.equal(approvals, 0);
     assert.equal(
       (
         await service.call("run_racket_workspace", {
@@ -81,6 +108,13 @@ test("Racket workspace encrypts per-user code, rejects stale edits, and runs exa
       ).lastRun.stdout,
       "Test passed",
     );
+    await writeFile(
+      path.join(configurations[0].stateDir, "racket/broken.json"),
+      "corrupt",
+    );
+    const listed = await service.call("list_racket_workspaces", {});
+    assert.equal(listed.workspaces.length, 1);
+    assert.equal(listed.unreadable[0].id, "broken");
     const bob = new RacketWorkspace(configurations[1]);
     await assert.rejects(
       bob.call("read_racket_workspace", { id: "a01" }),
@@ -97,6 +131,11 @@ test("Racket workspace encrypts per-user code, rejects stale edits, and runs exa
     );
     await assert.rejects(
       service.call("save_racket_workspace", { ...doc, id: "../secrets" }),
+    );
+    await unlink(path.join(configurations[0].secretsDir, "session-key"));
+    await assert.rejects(
+      service.call("read_racket_workspace", { id: "a01" }),
+      /RACKET_STATE_INVALID/,
     );
     assert(needsApproval("save_racket_workspace", doc));
     assert(needsApproval("run_racket_workspace", {}));

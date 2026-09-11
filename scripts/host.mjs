@@ -49,7 +49,9 @@ async function runningAudit() {
   const networkIds = [
     ...new Set(
       containers.flatMap((c) =>
-        Object.values(c.NetworkSettings.Networks).map((n) => n.NetworkID),
+        Object.values(c.NetworkSettings.Networks)
+          .map((n) => n.NetworkID)
+          .filter(Boolean),
       ),
     ),
   ];
@@ -148,15 +150,29 @@ try {
     const audit = await auditHost(dir);
     console.log(JSON.stringify(audit));
     if (!audit.passed || !audit.users) throw new Error("HOST_ISOLATION_FAILED");
-    if (command === "start")
-      await run("docker", [
+    if (command === "start") {
+      const users = (await loadHost(dir)).users;
+      const up = [
         "compose",
         "-f",
         path.join(dir, "compose.json"),
         "up",
         "-d",
         "--build",
-      ]);
+      ];
+      await run("docker", [...up, ...users.map((u) => u.id)]);
+      const runners = users
+        .filter((u) => u.racket)
+        .map((u) => "racket_" + u.id);
+      if (runners.length) {
+        try {
+          await run("docker", [...up, ...runners]);
+        } catch (e) {
+          if (stopping) throw e;
+          throw new Error("HOST_RACKET_START_FAILED");
+        }
+      }
+    }
     if (command === "start" || args.includes("--running")) await runningAudit();
   } else if (command === "stop" || command === "status")
     await run("docker", [
@@ -204,7 +220,9 @@ try {
           ? error.message
           : "HOST_SETUP_FAILED",
         action:
-          "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
+          error.message === "HOST_RACKET_START_FAILED"
+            ? "The MCP services started, but an optional Racket runner failed. Check that runner image and retry host start; existing MCP services remain available."
+            : "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
       },
     }),
   );

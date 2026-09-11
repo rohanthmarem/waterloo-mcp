@@ -81,12 +81,18 @@ for (const [name, code] of [
 ]) {
   r = await run(code);
   assert.equal(r.status, "error", name + ": " + JSON.stringify(r));
+  assert.match(
+    r.stderr,
+    /denied|disallowed|not allowed|not permitted/i,
+    name + ": " + JSON.stringify(r),
+  );
   console.log(name + ": denied");
 }
 r = await run('(displayln (getenv "HOME"))');
 assert.equal(r.stdout.trim(), "#f");
 r = await run("(let loop () (loop))");
-assert.equal(r.status, "error");
+assert.equal(r.code, "RACKET_TIME_LIMIT");
+assert.match(r.stderr, /Evaluation time limit exceeded/);
 r = await run('(let loop () (display "output flood") (loop))');
 assert.equal(r.code, "RACKET_OUTPUT_LIMIT");
 assert(Buffer.byteLength(r.stdout + r.stderr) <= 32768);

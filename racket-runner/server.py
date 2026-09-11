@@ -59,7 +59,7 @@ def execute(payload):
         proc.stdout.close()
         proc.stderr.close()
     return {"status": "error" if reason or proc.returncode else "completed",
-            "code": reason or ("RACKET_PROGRAM_ERROR" if proc.returncode else None),
+            "code": reason or ({124: "RACKET_TIME_LIMIT", 125: "RACKET_MEMORY_LIMIT"}.get(proc.returncode, "RACKET_PROGRAM_ERROR" if proc.returncode else None)),
             "stdout": output["stdout"].decode("utf8", errors="replace"),
             "stderr": output["stderr"].decode("utf8", errors="replace"),
             "durationMs": round((time.monotonic() - started) * 1000)}
@@ -78,7 +78,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        self.respond(200 if self.path == "/health" else 404, {"ready": self.path == "/health"})
+        self.respond(200 if self.path == "/health" else 404, {"ready": self.path == "/health", "busy": LOCK.locked()})
 
     def do_POST(self):
         self.connection.settimeout(5)

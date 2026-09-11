@@ -233,7 +233,11 @@ export function createGateway(
           } catch (e) {
             return httpError(
               res,
-              e instanceof RacketError ? e.code : "INPUT_INVALID",
+              e instanceof RacketError
+                ? e.code
+                : e.message === "REQUEST_TOO_LARGE"
+                  ? e.message
+                  : "INPUT_INVALID",
             );
           }
         }
@@ -419,6 +423,7 @@ export function createGateway(
       server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
         const { name } = params;
         let args = { ...params.arguments };
+        let authorizeRacket;
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
@@ -457,6 +462,15 @@ export function createGateway(
                 );
               }
             }
+            if (Object.hasOwn(racketSchemas, name)) {
+              try {
+                summary = await racket.preview(name, args);
+              } catch (e) {
+                return toolError(
+                  e instanceof RacketError ? e.code : "INPUT_INVALID",
+                );
+              }
+            }
             const id = await approvals.request(name, args, caller, summary);
             return toolError("APPROVAL_REQUIRED", {
               ...(summary ? { summary } : {}),
@@ -465,7 +479,15 @@ export function createGateway(
             });
           }
           try {
-            await approvals.consume(authorizationId, name, args, caller);
+            if (Object.hasOwn(racketSchemas, name))
+              authorizeRacket = async () => {
+                try {
+                  await approvals.consume(authorizationId, name, args, caller);
+                } catch {
+                  throw new RacketError("APPROVAL_INVALID");
+                }
+              };
+            else await approvals.consume(authorizationId, name, args, caller);
           } catch {
             return toolError("APPROVAL_INVALID");
           }
@@ -478,7 +500,9 @@ export function createGateway(
                     content: [
                       {
                         type: "text",
-                        text: JSON.stringify(await racket.call(name, args)),
+                        text: JSON.stringify(
+                          await racket.call(name, args, authorizeRacket),
+                        ),
                       },
                     ],
                   }
