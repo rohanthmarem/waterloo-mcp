@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile, access } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
 import { createInterface } from "node:readline/promises";
 import path from "node:path";
+import { provisionOwner } from "../src/portable-auth.mjs";
 import { root, readConfig } from "../src/config.mjs";
 
 const args = Object.fromEntries(
@@ -28,13 +29,23 @@ try {
     );
   const ask = async (key, label) =>
     args[key] ?? (await terminal.question(label + ": "));
-  const origin = await ask("origin", "Your private exe.dev HTTPS URL");
-  const owner = await ask("owner", "Email used to sign in to exe.dev");
+  const origin = await ask(
+    "origin",
+    "Your HTTPS service URL (or http://localhost:8000 for local use)",
+  );
+  const authMode =
+    args.auth ??
+    (new URL(origin).hostname.endsWith(".exe.xyz") ? "exedev" : "portable");
+  const owner = await ask(
+    "owner",
+    "Owner email (exe.dev account email in exedev mode)",
+  );
   const username = await ask(
     "username",
     "Waterloo username (userid@uwaterloo.ca)",
   );
   const config = readConfig({
+    WATERLOO_AUTH_MODE: authMode,
     WATERLOO_ORIGIN: origin,
     WATERLOO_OWNER_EMAIL: owner,
     D2L_USERNAME: username,
@@ -58,13 +69,21 @@ try {
     mode: 0o600,
     flag: "wx",
   });
+  if (authMode === "portable")
+    await provisionOwner(
+      config.secretsDir,
+      path.join(root, "private/owner.token"),
+    );
   await writeFile(
     path.join(root, ".env"),
-    `WATERLOO_ORIGIN=${config.origin}\nWATERLOO_OWNER_EMAIL=${config.owner}\nD2L_USERNAME=${config.username}\n`,
+    `WATERLOO_AUTH_MODE=${authMode}\nWATERLOO_ORIGIN=${config.origin}\nWATERLOO_OWNER_EMAIL=${config.owner}\nD2L_USERNAME=${config.username}\n`,
     { mode: 0o600, flag: "wx" },
   );
   console.log(
-    "Setup saved. Next: npm run build, npx playwright install chromium, npm run login.",
+    (authMode === "portable"
+      ? "Setup saved. Owner key: private/owner.token (keep it private; sign in at /login). "
+      : "Setup saved for private exe.dev authentication. ") +
+      "Next: npm run build, npx playwright install chromium, npm run login.",
   );
 } catch (error) {
   console.error(

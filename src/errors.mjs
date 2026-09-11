@@ -1,6 +1,24 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  HOST_REJECTED: [
+    400,
+    "The request hostname does not match this instance.",
+    "Use this user's configured service URL; preserve Host in the HTTPS proxy.",
+    false,
+  ],
+  LOGIN_RATE_LIMITED: [
+    429,
+    "Too many failed owner sign-ins.",
+    "Wait one minute and check the private owner key file. Do not use your Waterloo password.",
+    true,
+  ],
+  SESSION_IMPORT_REJECTED: [
+    400,
+    "The uploaded login could not be verified for this Waterloo account.",
+    "Sign in to the configured account on your computer and retry. Never upload another user's session.",
+    false,
+  ],
   PIAZZA_AUTH_REQUIRED: [
     401,
     "Piazza needs a valid sign-in.",

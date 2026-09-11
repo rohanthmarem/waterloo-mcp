@@ -55,6 +55,24 @@ try {
       "Remove access for other users (chmod 600 locally or 640 in Docker).",
     );
   } catch {}
+  if (config.authMode === "portable") {
+    const file = path.join(config.secretsDir, "owner-auth.json");
+    try {
+      const owner = JSON.parse(await readFile(file, "utf8"));
+      check(
+        "PORTABLE_OWNER_AUTH",
+        /^[a-f0-9]{64}$/.test(owner.tokenHash) &&
+          /^[a-f0-9]{64}$/.test(owner.sessionKey),
+        "Restore this user's owner-auth.json.",
+      );
+    } catch {
+      check(
+        "PORTABLE_OWNER_AUTH",
+        false,
+        "Complete portable setup for this user.",
+      );
+    }
+  }
   const unattended = await access(
     path.join(config.stateDir, "authenticator/authenticator.encrypted.json"),
   ).then(

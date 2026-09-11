@@ -1,6 +1,13 @@
 # Changes
 
-## Unreleased
+## 0.4.0
+
+- Add portable hosting on Docker-capable computers and servers, with single-user and per-user-container modes.
+- Add hashed agent tokens, separate owner access keys, signed expiring owner cookies, owner-key rotation, and strict hostname/origin checks.
+- Add account-verified HTTPS login import from a user's browser-capable computer to a headless host.
+- Refuse shared cookie hostnames and duplicate identities; isolate each user's state, encryption keys, worker/browser, cache, approvals, and network.
+- Add static and running-container isolation audits with explicit failing checks, plus adversarial two-user HTTP and container tests.
+- Keep the existing exe.dev deployment mode compatible.
 
 - Add an offline performance suite (`npm run bench`) with a fake LEARN server, golden output checks for every API tool, and a comparison report; see `docs/performance.md`.
 - Read independent LEARN resources together: module children, assignment submissions and feedback, quiz attempts, forum topics, and topic posts. Raise the client-side LEARN rate limit from 3 to 8 requests per second with a burst of 20, served in strict order, while still honoring 429 Retry-After.

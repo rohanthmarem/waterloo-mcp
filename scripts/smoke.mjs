@@ -11,11 +11,17 @@ if (!file) {
   process.exit(2);
 }
 const token = (await readFile(file, "utf8")).trim();
-const c = new Client({ name: "waterloo-smoke", version: "0.3.0" });
+const c = new Client({ name: "waterloo-smoke", version: "0.4.0" });
 try {
   await c.connect(
     new StreamableHTTPClientTransport(new URL(config.origin + "/mcp"), {
-      requestInit: { headers: { "X-Exedev-Authorization": "Bearer " + token } },
+      requestInit: {
+        headers: {
+          [config.authMode === "portable"
+            ? "Authorization"
+            : "X-Exedev-Authorization"]: "Bearer " + token,
+        },
+      },
     }),
   );
   const list = await c.listTools();
