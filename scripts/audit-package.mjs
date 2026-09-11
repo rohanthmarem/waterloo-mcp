@@ -17,8 +17,9 @@ if (!files.length) {
   process.exit(1);
 }
 const blocked =
-  /(^|\/)(private|node_modules|build|\.env)(\/|$)|\.(token|pem|key|secret|log|zip)$|authenticator\.encrypted\.json$/i;
+  /(^|\/)(private|node_modules|build|\.env)(\/|$)|\.(token|pem|key|secret|log|zip)$|authenticator\.encrypted\.json$|(^|\/)(session-key|authenticator-key|owner-auth\.json|session\.encrypted\.json)$/i;
 const patterns = [
+  /w[om]1_[A-Za-z0-9_-]{43}/,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
   /exe0\.[A-Za-z0-9_-]{30,}\.[A-Za-z0-9_-]{50,}/,
   /gh[pousr]_[A-Za-z0-9]{30,}/,

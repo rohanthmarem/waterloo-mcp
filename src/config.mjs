@@ -1,4 +1,4 @@
-import "dotenv/config";
+import dotenv from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -6,7 +6,15 @@ export const root = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
+dotenv.config({
+  path: path.join(process.env.WATERLOO_HOME ?? root, ".env"),
+  quiet: true,
+});
 export function readConfig(env = process.env) {
+  const home = path.resolve(env.WATERLOO_HOME ?? root);
+  const authMode = env.WATERLOO_AUTH_MODE ?? "exedev";
+  if (!["exedev", "portable"].includes(authMode))
+    throw new Error("CONFIG_INVALID");
   const origin = new URL(env.WATERLOO_ORIGIN ?? "http://127.0.0.1:8000");
   const local = ["127.0.0.1", "localhost"].includes(origin.hostname);
   if (
@@ -27,16 +35,18 @@ export function readConfig(env = process.env) {
   if (!Number.isInteger(port) || port < 1 || port > 65535)
     throw new Error("CONFIG_INVALID");
   return {
+    home,
+    authMode,
     origin: origin.origin,
     owner: env.WATERLOO_OWNER_EMAIL.toLowerCase(),
     port,
     bind: env.WATERLOO_BIND ?? "127.0.0.1",
     username: env.D2L_USERNAME,
     stateDir: path.resolve(
-      env.WATERLOO_STATE_DIR ?? path.join(root, "private/state"),
+      env.WATERLOO_STATE_DIR ?? path.join(home, "private/state"),
     ),
     secretsDir: path.resolve(
-      env.WATERLOO_SECRETS_DIR ?? path.join(root, "private/secrets"),
+      env.WATERLOO_SECRETS_DIR ?? path.join(home, "private/secrets"),
     ),
   };
 }

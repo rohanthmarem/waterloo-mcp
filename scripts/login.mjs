@@ -1,20 +1,51 @@
 import { chromium } from "playwright";
-import { mkdir, readFile, writeFile, rename } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
-import path from "node:path";
 import { readConfig, workerEnv } from "../src/config.mjs";
+import { importSession } from "../src/import-session.mjs";
 import { problem } from "../src/errors.mjs";
 
-const config = readConfig();
-Object.assign(process.env, workerEnv(config));
-const { encrypt } = await import("../upstream/build/auth/encrypted-store.js");
-const { SessionStore } = await import(
-  "../upstream/build/auth/session-store.js"
+const args = Object.fromEntries(
+  process.argv.slice(2).map((a) => {
+    const i = a.indexOf("=");
+    return [a.slice(2, i), a.slice(i + 1)];
+  }),
 );
-let browser;
-let terminal;
+let browser, terminal;
 try {
-  // A normal fresh browser: users enter their password and complete their own MFA.
+  let config, remote, headers;
+  if (args.remote) {
+    // Validate HTTPS (or local loopback), credentials-in-URL, and path before
+    // reading the owner key. Never forward it through an HTTP redirect.
+    remote = readConfig({
+      WATERLOO_ORIGIN: args.remote,
+      WATERLOO_OWNER_EMAIL: "setup@example.invalid",
+      D2L_USERNAME: "setup@uwaterloo.ca",
+      WATERLOO_AUTH_MODE: "portable",
+    }).origin;
+    const token = (await readFile(args["token-file"], "utf8")).trim();
+    headers = { Authorization: "Bearer " + token, Origin: remote };
+    const account = await fetch(remote + "/account", {
+      headers,
+      redirect: "manual",
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!account.ok) throw new Error("AUTH_REQUIRED");
+    const info = await account.json();
+    if (
+      !/^[a-z0-9._-]+@uwaterloo\.ca$/i.test(info.username ?? "") ||
+      info.origin !== remote
+    )
+      throw new Error("AUTH_REQUIRED");
+    console.log(
+      "Sign in as " +
+        info.username +
+        ". The verified session will be sent to your chosen host over this connection.",
+    );
+  } else {
+    config = readConfig();
+    Object.assign(process.env, workerEnv(config));
+  }
   browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
@@ -23,68 +54,37 @@ try {
   });
   terminal = createInterface({ input: process.stdin, output: process.stdout });
   await terminal.question(
-    "Sign in to LEARN in the browser. When your course homepage appears, press Enter here. ",
+    "Sign in to LEARN and complete Duo in the browser. When your course homepage appears, press Enter here. ",
   );
   if (new URL(page.url()).origin !== "https://learn.uwaterloo.ca")
-    throw new Error("Not signed in");
-  const cookies = (await context.cookies("https://learn.uwaterloo.ca")).filter(
-    (c) => ["d2lSessionVal", "d2lSecureSessionVal"].includes(c.name),
-  );
-  if (cookies.length !== 2) throw new Error("Session missing");
-  const cookie = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
-  const get = async (route) => {
-    const res = await fetch("https://learn.uwaterloo.ca" + route, {
-      headers: { Cookie: cookie },
+    throw new Error("AUTH_REAUTH_REQUIRED");
+  const state = await context.storageState();
+  if (remote) {
+    const result = await fetch(remote + "/setup/session", {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(state),
       redirect: "manual",
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(45000),
     });
-    if (!res.ok || !res.headers.get("content-type")?.includes("json"))
-      throw new Error("API rejected login");
-    return res.json();
-  };
-  const versions = await get("/d2l/api/versions/");
-  const lp = versions.find((v) => v.ProductCode === "lp")?.LatestVersion;
-  if (!/^\d+\.\d+$/.test(lp ?? "")) throw new Error("Invalid version");
-  const who = await get(`/d2l/api/lp/${lp}/users/whoami`);
-  const expected = config.username.split("@")[0].toLowerCase();
-  if (who.UniqueName?.toLowerCase() !== expected)
-    throw new Error("Wrong Waterloo account");
-  const key = Buffer.from(
-    (
-      await readFile(path.join(config.secretsDir, "session-key"), "utf8")
-    ).trim(),
-    "hex",
-  );
-  try {
-    await mkdir(config.stateDir, { recursive: true, mode: 0o700 });
-    const file = path.join(config.stateDir, "browser.json");
-    await writeFile(
-      file + ".pending",
-      JSON.stringify(
-        encrypt(
-          JSON.stringify(await context.storageState()),
-          key,
-          "waterloo-browser:v1",
-        ),
-      ),
-      { mode: 0o600 },
-    );
-    await rename(file + ".pending", file);
-    await new SessionStore(process.env.D2L_SESSION_DIR).save({
-      accessToken: "cookie:" + cookie,
-      capturedAt: Date.now(),
-      expiresAt: Date.now() + 3600000,
-      source: "browser",
-      tenantOrigin: "https://learn.uwaterloo.ca",
-    });
-  } finally {
-    key.fill(0);
-  }
+    if (!result.ok || !(await result.json()).connected)
+      throw new Error("SESSION_IMPORT_REJECTED");
+  } else await importSession(config, state);
   console.log(
-    "Login verified. Encrypted session saved under private/. Deploy it through SSH; never commit it.",
+    remote
+      ? "Login verified and encrypted on your host. No session export file or server encryption key was saved to this computer."
+      : "Login verified. Encrypted session saved under this user's private directory.",
   );
-} catch {
-  console.error(JSON.stringify(problem("AUTH_REAUTH_REQUIRED")));
+} catch (error) {
+  console.error(
+    JSON.stringify(
+      problem(
+        ["AUTH_REQUIRED", "SESSION_IMPORT_REJECTED"].includes(error.message)
+          ? error.message
+          : "AUTH_REAUTH_REQUIRED",
+      ),
+    ),
+  );
   process.exitCode = 1;
 } finally {
   terminal?.close();

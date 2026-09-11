@@ -1,5 +1,7 @@
 # Connect Grokbot or another agent
 
+For portable hosting, use standard `Authorization: Bearer TOKEN` with the token issued by `npm run host -- client USER issue AGENT`. Keep the owner key separate. See [portable client setup](hosting.md#connect-any-compatible-agent). The instructions below describe the original exe.dev mode.
+
 Use Streamable HTTP at `https://YOUR-VM.exe.xyz/mcp` with the custom header `X-Exedev-Authorization: Bearer TOKEN`. This is exe.dev authentication, not Waterloo authentication. The Waterloo session remains on the VM.
 
 1. Create a named client with `npm run client -- issue NAME /absolute/path/to/exe-ssh-key`.

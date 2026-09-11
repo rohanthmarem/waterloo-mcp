@@ -1,6 +1,6 @@
 {
   "name": "waterloo-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Personal Waterloo LEARN, Piazza, Odyssey, course outlines, and study rooms over MCP.",
   "type": "module",
   "scripts": {
@@ -22,7 +22,10 @@
     "test:rooms:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/libcal-browser.test.mjs",
     "bench": "node bench/run.mjs",
     "bench:compare": "node bench/compare.mjs",
-    "bench:live": "node bench/live.mjs"
+    "bench:live": "node bench/live.mjs",
+    "host": "node scripts/host.mjs",
+    "owner": "node scripts/owner.mjs",
+    "test:hosting:containers": "node tests/host-containers.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",

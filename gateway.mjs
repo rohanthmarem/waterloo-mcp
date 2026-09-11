@@ -1,4 +1,6 @@
 import http from "node:http";
+import { PortableAuth } from "./src/portable-auth.mjs";
+import { importSession } from "./src/import-session.mjs";
 import { readFile, writeFile, rename } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,12 +57,12 @@ function httpError(res, code) {
   const p = problem(code);
   reply(res, p.httpStatus, p);
 }
-async function body(req) {
+async function body(req, limit = 65536) {
   let size = 0;
   const chunks = [];
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 65536) throw new Error("REQUEST_TOO_LARGE");
+    if (size > limit) throw new Error("REQUEST_TOO_LARGE");
     chunks.push(chunk);
   }
   return Buffer.concat(chunks).toString("utf8");
@@ -77,6 +79,8 @@ export function createGateway(
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
   const piazza = new Piazza(piazzaSession);
+  const portable =
+    config.authMode === "portable" ? new PortableAuth(config) : null;
   let upstream;
   async function client() {
     upstream ??= createClient().catch(() => {
@@ -87,34 +91,135 @@ export function createGateway(
   }
   const app = http.createServer(async (req, res) => {
     try {
-      // Trust only exe.dev's private authenticated proxy. Never expose this port publicly.
-      if (req.headers["x-exedev-email"]?.toLowerCase() !== config.owner)
-        return httpError(res, "AUTH_REQUIRED");
-      const tokenContext = req.headers["x-exedev-token-ctx"];
+      if (req.url === "/health" && req.method === "GET")
+        return reply(res, 200, { status: "running" });
       let caller = "owner-browser";
-      if (tokenContext !== undefined) {
-        let ctx;
-        try {
-          ctx = JSON.parse(tokenContext);
-        } catch {
-          return httpError(res, "CLIENT_REVOKED");
-        }
-        const clients = JSON.parse(
-          await readFile(path.join(config.secretsDir, "clients.json"), "utf8"),
-        );
-        if (
-          ctx.role !== "mcp" ||
-          !clients.some(
-            (c) => c.id === ctx.id && c.enabled && c.expiresAt > Date.now(),
+      if (portable) {
+        if (!portable.validHost(req)) return httpError(res, "HOST_REJECTED");
+        if (req.headers.origin && req.headers.origin !== config.origin)
+          return httpError(res, "ORIGIN_REJECTED");
+        const loginUrl = new URL(req.url, config.origin);
+        const requestedNext = loginUrl.searchParams.get("next");
+        const ownerPath = (value) =>
+          /^\/(?:connection|setup(?:\/piazza)?|approvals\/[a-f0-9]{32,128})$/.test(
+            value ?? "",
+          );
+        const next = ownerPath(requestedNext) ? requestedNext : "/connection";
+        if (loginUrl.pathname === "/login" && req.method === "GET")
+          return reply(
+            res,
+            200,
+            '<title>Waterloo MCP sign in</title><h1>Sign in to your Waterloo MCP</h1><p>Use your private owner access key. This is not your Waterloo password or an agent token.</p><form method="post"><label>Owner access key <input type="password" name="token" required maxlength="100" autocomplete="current-password"></label><button>Sign in</button></form>',
+            "text/html; charset=utf-8",
+          );
+        if (loginUrl.pathname === "/login" && req.method === "POST") {
+          if (
+            req.headers.origin !== config.origin ||
+            !req.headers["content-type"]?.startsWith(
+              "application/x-www-form-urlencoded",
+            )
           )
-        )
+            return httpError(res, "ORIGIN_REJECTED");
+          try {
+            const token = new URLSearchParams(await body(req)).get("token");
+            res.setHeader("Set-Cookie", await portable.login(token));
+            return reply(
+              res,
+              200,
+              `<h1>Signed in</h1><p><a href="${escape(next)}">Continue to your requested page</a></p>`,
+              "text/html; charset=utf-8",
+            );
+          } catch (error) {
+            return httpError(
+              res,
+              [
+                "AUTH_REQUIRED",
+                "LOGIN_RATE_LIMITED",
+                "REQUEST_TOO_LARGE",
+              ].includes(error.message)
+                ? error.message
+                : "CONFIG_INVALID",
+            );
+          }
+        }
+        const identity = await portable.authenticate(req);
+        if (!identity) {
+          if (
+            req.method === "GET" &&
+            !req.headers.authorization &&
+            ownerPath(req.url)
+          ) {
+            res.writeHead(303, {
+              Location: "/login?next=" + encodeURIComponent(req.url),
+              "Cache-Control": "no-store",
+            });
+            return res.end();
+          }
+          return httpError(res, "AUTH_REQUIRED");
+        }
+        if (identity.role === "mcp" && !["/mcp", "/status"].includes(req.url))
           return httpError(res, "CLIENT_REVOKED");
-        if (!["/mcp", "/status"].includes(req.url))
-          return httpError(res, "CLIENT_REVOKED");
-        caller = ctx.id;
+        caller = identity.id;
+      } else {
+        // Trust only exe.dev's private authenticated proxy. Never expose this port publicly.
+        if (req.headers["x-exedev-email"]?.toLowerCase() !== config.owner)
+          return httpError(res, "AUTH_REQUIRED");
+        const tokenContext = req.headers["x-exedev-token-ctx"];
+        if (tokenContext !== undefined) {
+          let ctx;
+          try {
+            ctx = JSON.parse(tokenContext);
+          } catch {
+            return httpError(res, "CLIENT_REVOKED");
+          }
+          const clients = JSON.parse(
+            await readFile(
+              path.join(config.secretsDir, "clients.json"),
+              "utf8",
+            ),
+          );
+          if (
+            ctx.role !== "mcp" ||
+            !clients.some(
+              (c) => c.id === ctx.id && c.enabled && c.expiresAt > Date.now(),
+            )
+          )
+            return httpError(res, "CLIENT_REVOKED");
+          if (!["/mcp", "/status"].includes(req.url))
+            return httpError(res, "CLIENT_REVOKED");
+          caller = ctx.id;
+        }
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (req.url === "/account" && req.method === "GET")
+        return reply(res, 200, {
+          username: config.username,
+          origin: config.origin,
+        });
+      if (req.url === "/setup/session" && req.method === "POST") {
+        if (
+          req.headers.origin !== config.origin ||
+          !req.headers["content-type"]?.startsWith("application/json")
+        )
+          return httpError(res, "ORIGIN_REJECTED");
+        try {
+          const state = JSON.parse(await body(req, 1024 * 1024));
+          const result = await importSession(config, state);
+          if (upstream) {
+            await (await upstream).close();
+            upstream = undefined;
+          }
+          return reply(res, 200, result);
+        } catch (error) {
+          return httpError(
+            res,
+            error.message === "REQUEST_TOO_LARGE"
+              ? error.message
+              : "SESSION_IMPORT_REJECTED",
+          );
+        }
+      }
       if (req.url === "/setup/piazza" && req.method === "GET")
         return reply(
           res,
@@ -149,7 +254,7 @@ export function createGateway(
       if (req.url === "/status" && req.method === "GET")
         return reply(res, 200, {
           service: "waterloo-mcp",
-          version: "0.3.0",
+          version: "0.4.0",
           status: "running",
         });
       if (req.url?.startsWith("/approvals/")) {
@@ -193,7 +298,7 @@ export function createGateway(
         return reply(
           res,
           200,
-          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
+          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
           "text/html; charset=utf-8",
         );
       if (req.url === "/setup" && req.method === "POST") {
@@ -250,7 +355,7 @@ export function createGateway(
         );
       }
       const server = new Server(
-        { name: "waterloo-mcp", version: "0.3.0" },
+        { name: "waterloo-mcp", version: "0.4.0" },
         { capabilities: { tools: {} } },
       );
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
@@ -367,7 +472,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   try {
     const config = readConfig();
     const app = createGateway(config, async () => {
-      const c = new Client({ name: "waterloo-gateway", version: "0.3.0" });
+      const c = new Client({ name: "waterloo-gateway", version: "0.4.0" });
       await c.connect(
         new StdioClientTransport({
           command: process.execPath,

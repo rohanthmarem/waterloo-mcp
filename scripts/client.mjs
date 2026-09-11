@@ -5,8 +5,11 @@ import {
   rename,
   open,
   unlink,
+  stat,
+  chown,
 } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
+import { tokenHash } from "../src/portable-auth.mjs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import path from "node:path";
@@ -19,7 +22,7 @@ if (
   (command !== "list" && !/^[a-z0-9-]{1,40}$/.test(name ?? ""))
 ) {
   console.log(
-    "Usage: npm run client -- issue NAME /absolute/path/to/exe-ssh-key\n       npm run client -- revoke NAME\n       npm run client -- list",
+    "Usage: npm run client -- issue NAME [legacy-exe-SSH-key]\n       npm run client -- revoke NAME\n       npm run client -- list",
   );
   process.exit(2);
 }
@@ -54,7 +57,10 @@ try {
         c.enabled = false;
       });
   } else if (command === "issue") {
-    if (!signingKey || !path.isAbsolute(signingKey))
+    if (
+      config.authMode === "exedev" &&
+      (!signingKey || !path.isAbsolute(signingKey))
+    )
       throw new Error("Use an absolute SSH signing key path.");
     if (clients.some((c) => c.name === name && c.enabled))
       throw new Error(
@@ -62,40 +68,53 @@ try {
       );
     const id = randomBytes(16).toString("hex");
     const expiresAt = Date.now() + 90 * 86400000;
-    const payload = Buffer.from(
-      JSON.stringify({
-        exp: Math.floor(expiresAt / 1000),
-        cmds: [],
-        ctx: { role: "mcp", id },
-      }),
-    );
-    const dir = path.join(root, "private/clients");
+    const dir = path.join(config.home, "private/clients");
     await mkdir(dir, { recursive: true, mode: 0o700 });
-    // ssh-keygen signs a file, so no secret is interpolated into a shell command.
-    const payloadFile = path.join(dir, name + "-" + id + ".payload");
-    await writeFile(payloadFile, payload, { mode: 0o600, flag: "wx" });
-    await exec("ssh-keygen", [
-      "-Y",
-      "sign",
-      "-f",
-      signingKey,
-      "-n",
-      "v0@" + new URL(config.origin).hostname,
-      payloadFile,
-    ]);
-    const signature = (await readFile(payloadFile + ".sig", "utf8"))
-      .trim()
-      .split("\n")
-      .slice(1, -1)
-      .join("");
-    const token =
-      "exe0." +
-      payload.toString("base64url") +
-      "." +
-      Buffer.from(signature, "base64").toString("base64url");
+    let token;
+    if (config.authMode === "portable")
+      token = "wm1_" + randomBytes(32).toString("base64url");
+    else {
+      const payload = Buffer.from(
+        JSON.stringify({
+          exp: Math.floor(expiresAt / 1000),
+          cmds: [],
+          ctx: { role: "mcp", id },
+        }),
+      );
+      // ssh-keygen signs a file, so no secret is interpolated into a shell command.
+      const payloadFile = path.join(dir, name + "-" + id + ".payload");
+      await writeFile(payloadFile, payload, { mode: 0o600, flag: "wx" });
+      await exec("ssh-keygen", [
+        "-Y",
+        "sign",
+        "-f",
+        signingKey,
+        "-n",
+        "v0@" + new URL(config.origin).hostname,
+        payloadFile,
+      ]);
+      const signature = (await readFile(payloadFile + ".sig", "utf8"))
+        .trim()
+        .split("\n")
+        .slice(1, -1)
+        .join("");
+      token =
+        "exe0." +
+        payload.toString("base64url") +
+        "." +
+        Buffer.from(signature, "base64").toString("base64url");
+    }
     const tokenFile = path.join(dir, name + "-" + id + ".token");
     await writeFile(tokenFile, token, { mode: 0o600, flag: "wx" });
-    clients.push({ name, id, enabled: true, expiresAt });
+    clients.push({
+      name,
+      id,
+      enabled: true,
+      expiresAt,
+      ...(config.authMode === "portable"
+        ? { tokenHash: tokenHash(token) }
+        : {}),
+    });
     console.log(
       "Token saved to " +
         tokenFile +
@@ -106,9 +125,13 @@ try {
     await writeFile(file + ".pending", JSON.stringify(clients, null, 2), {
       mode: 0o600,
     });
+    if (process.getuid?.() === 0) {
+      const { uid, gid } = await stat(file);
+      await chown(file + ".pending", uid, gid);
+    }
     await rename(file + ".pending", file);
     console.log(
-      "Client registry updated. Deploy private/secrets/clients.json to apply the change on the VM.",
+      "Client registry updated. A locally hosted instance reads it immediately. For a remote deployment, transfer only this user’s registry through your secure administration channel.",
     );
   }
 } catch (error) {

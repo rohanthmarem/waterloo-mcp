@@ -24,5 +24,5 @@ COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs renew.mjs 
 ENV NODE_ENV=production WATERLOO_SERVICE=1 WATERLOO_BIND=0.0.0.0 WATERLOO_STATE_DIR=/state WATERLOO_SECRETS_DIR=/run/secrets D2L_BASE_URL=https://learn.uwaterloo.ca D2L_SESSION_DIR=/state/sessions
 USER pwuser
 EXPOSE 8000
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:8000/status').then(r=>process.exit(r.status===401?0:1)).catch(()=>process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s CMD node -e "fetch('http://127.0.0.1:8000/health').then(r=>process.exit(r.status===200?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "gateway.mjs"]

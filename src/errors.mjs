@@ -1,6 +1,24 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  HOST_REJECTED: [
+    400,
+    "The request hostname does not match this instance.",
+    "Use this user's configured service URL; preserve Host in the HTTPS proxy.",
+    false,
+  ],
+  LOGIN_RATE_LIMITED: [
+    429,
+    "Too many failed owner sign-ins.",
+    "Wait one minute and check the private owner key file. Do not use your Waterloo password.",
+    true,
+  ],
+  SESSION_IMPORT_REJECTED: [
+    400,
+    "The uploaded login could not be verified for this Waterloo account.",
+    "Sign in to the configured account on your computer and retry. Never upload another user's session.",
+    false,
+  ],
   PIAZZA_AUTH_REQUIRED: [
     401,
     "Piazza needs a valid sign-in.",
@@ -100,7 +118,7 @@ export const ERRORS = {
   AUTH_REQUIRED: [
     401,
     "Sign in to access this service.",
-    "Open the service in your browser or supply an exe.dev client token.",
+    "Open the owner sign-in page, or use the agent token and authentication header configured for this instance.",
     false,
   ],
   CLIENT_REVOKED: [
@@ -124,7 +142,7 @@ export const ERRORS = {
   REQUEST_TOO_LARGE: [
     413,
     "The request is too large.",
-    "Send a smaller request (maximum 64 KiB).",
+    "Send a smaller request: 64 KiB for normal requests, or 1 MiB for a browser-session import.",
     false,
   ],
   TOOL_UNSUPPORTED: [
@@ -154,7 +172,7 @@ export const ERRORS = {
   AUTH_REAUTH_REQUIRED: [
     401,
     "Your Waterloo session needs a new sign-in.",
-    "Run npm run login on your computer, then deploy the updated private state.",
+    "Refresh the login for this user. For a portable host, use the remote login command in docs/hosting.md; legacy deployments require a secure state update.",
     false,
   ],
   UPSTREAM_FORBIDDEN: [

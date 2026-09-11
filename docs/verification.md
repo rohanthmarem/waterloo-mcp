@@ -1,4 +1,17 @@
-# Verification for 0.3.0
+# Verification for 0.4.0
+
+Checked on 2026-09-11 with synthetic accounts. The existing production installation was kept separate.
+
+- The build, 29 application tests, and 411 library tests passed locally. Four optional application browser fixtures and three optional upstream browser tests were skipped in that run.
+- Two real Linux AMD64 containers built from the production Dockerfile passed the shared-host test. Each MCP read returned only that user's encrypted test booking. Foreign agent tokens, owner keys, and owner cookies were rejected. Agent tokens could not open owner setup pages.
+- The generated configuration passed 38 of 38 file checks. The actual containers passed 13 of 13 runtime checks, including private mounts and networks, non-root processes, a read-only root filesystem, and loopback-only published ports.
+- HTTP tests cover separate caches, approval ownership and single use, token revocation, forged proxy headers, host and origin checks, login throttling, and cookie expiry. Session-import tests reject the wrong Waterloo account before saving and verify encryption with the selected user's key.
+- The isolation audit detects reused encryption keys, shared paths, and altered container settings. Owner rotation invalidates old owner credentials without replacing school encryption keys.
+- CI runs the two-container test with generated keys and no school credentials. Run it yourself with `npm run test:hosting:containers` on a Docker host.
+
+The container test models the HTTPS proxy's HTTP connection to the backend; it does not install DNS or certificates. A fresh real user's Waterloo/Duo browser login, macOS/Windows Docker hosts, and Linux ARM64 were not tested for this release. The pinned base image publishes AMD64 and ARM64 variants. These checks do not establish protection from the host administrator or guarantee that Waterloo sessions will renew without MFA.
+
+## Previous release: 0.3.0
 
 Checked on 2026-09-09. The private HTTPS MCP served 34 tools, including six new Piazza readers, using the existing agent token.
 

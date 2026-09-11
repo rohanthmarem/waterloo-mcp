@@ -1,8 +1,8 @@
 # Waterloo MCP
 
-Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, Odyssey assessment schedule, published course outlines, and library study-room bookings. Run one private server on your own exe.dev VM and connect any MCP client that supports Streamable HTTP with a custom authentication header.
+Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, Odyssey assessment schedule, published course outlines, and library study-room bookings. Host on a Docker-capable computer or server and connect any MCP client that supports Streamable HTTP with a custom authentication header. Choose one user or several isolated users on the same device.
 
-**Each person deploys their own instance and signs in with their own Waterloo account.** Sharing this repository does not share an account, a session, or access to course material.
+**Each person gets a separate instance and signs in with their own Waterloo account.** A shared host runs a separate container, keys, saved state, browser process, cache, and approvals for every user. Sharing this repository does not share an account, a session, or access to course material.
 
 This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MCP server](https://github.com/RohanMuppa/brightspace-mcp-server). It is not affiliated with Waterloo, D2L, Duo, Piazza, or exe.dev.
 
@@ -16,7 +16,28 @@ This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MC
 
 See [Piazza setup](docs/piazza.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md). Outlook mail is not included.
 
-## Set up your own server
+## Recommended: host on your chosen device
+
+See [portable hosting and multi-user setup](docs/hosting.md). No exe.dev account is required.
+
+| Mode                          | What runs                                                    | Authentication                                           |
+| ----------------------------- | ------------------------------------------------------------ | -------------------------------------------------------- |
+| One device, one user          | One container and one private data directory                 | Private owner key plus separate agent tokens             |
+| One device, multiple users    | One isolated container and private data directory per person | Separate hostnames, keys, cookies, tokens, and approvals |
+| Existing exe.dev installation | Existing personal deployment                                 | Original private exe.dev proxy and tokens                |
+
+```sh
+npm ci
+npm run build
+npm run host -- init --mode=single
+npm run host -- add alice --origin=http://localhost:8001 --owner=alice@example.com --username=alice@uwaterloo.ca --port=8001
+npm run host -- start
+npm run host -- client alice issue school-agent
+```
+
+Use `--mode=multi` for a shared host, with a different HTTPS hostname per person. Users can send a verified login from their own computer to a headless host. `host audit --running` checks for shared keys/mounts and unsafe container settings; it reports failures and counts, not an assurance that the host cannot be compromised. The host administrator remains trusted. [Full instructions and limits](docs/hosting.md).
+
+## exe.dev-specific setup
 
 You need Node.js 22 or later, Git, OpenSSH with `ssh-keygen -Y sign`, and a local browser. Use macOS or Linux; Windows users should use WSL with working browser display support. Your exe.dev VM needs Docker and Docker Compose. Allow several GB of disk space for Chromium and transcription dependencies.
 
@@ -139,4 +160,4 @@ bench/               Offline performance suite against a fake LEARN; see docs/pe
 private/             Your local secrets and state; never shared
 ```
 
-Release 0.3.0 adds six Piazza read tools and encrypted browser-free login renewal. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Release 0.4.0 adds portable authentication, single/multi-user hosting, remote login import, and isolation audits. The tool catalog remains at 34. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
