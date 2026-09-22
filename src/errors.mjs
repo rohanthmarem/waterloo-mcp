@@ -1,6 +1,18 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  BATCH_READ_ONLY: [
+    400,
+    "The batch contains an unsupported or write-capable request.",
+    "Use only listed read-only tools; request downloads and writes separately through owner approval.",
+    false,
+  ],
+  BATCH_RESULT_TOO_LARGE: [
+    413,
+    "This result exceeds the batch size limit.",
+    "Call this tool individually with a smaller page size if available.",
+    false,
+  ],
   MARMOSET_AUTH_REQUIRED: [
     401,
     "Marmoset sign-in needs renewal.",

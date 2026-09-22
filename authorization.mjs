@@ -3,6 +3,7 @@ import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { racketWriteTools } from "./src/racket-workspace.mjs";
 export const READ_TOOLS = new Set([
+  "read_course_file",
   "check_marmoset_auth",
   "list_marmoset_courses",
   "list_marmoset_projects",
@@ -47,6 +48,7 @@ export const ROOM_WRITE_TOOLS = new Set([
   "cancel_study_room_booking",
 ]);
 export const KNOWN_TOOLS = new Set([
+  "read_many",
   ...READ_TOOLS,
   "download_file",
   ...ROOM_WRITE_TOOLS,
