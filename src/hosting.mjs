@@ -112,6 +112,10 @@ export function composeFor(dir, manifest, sourceRoot = root) {
         createHash("sha256").update(dir).digest("hex").slice(0, 10) +
         "-mcp",
       restart: "unless-stopped",
+      logging: {
+        driver: "local",
+        options: { "max-size": "10m", "max-file": "3" },
+      },
       init: true,
       user: `${manifest.uid}:${manifest.gid}`,
       environment: {
@@ -161,6 +165,10 @@ export function composeFor(dir, manifest, sourceRoot = root) {
       services[runner] = {
         build: { context: path.join(sourceRoot, "racket-runner") },
         restart: "unless-stopped",
+        logging: {
+          driver: "local",
+          options: { "max-size": "10m", "max-file": "3" },
+        },
         init: true,
         user: "65534:65534",
         read_only: true,

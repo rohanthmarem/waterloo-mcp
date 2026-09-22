@@ -1,0 +1,10 @@
+[Unit]
+Description=Check Waterloo MCP host disk use every six hours
+
+[Timer]
+OnBootSec=15min
+OnUnitActiveSec=6h
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

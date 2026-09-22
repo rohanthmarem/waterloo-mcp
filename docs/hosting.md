@@ -101,6 +101,9 @@ Call `check_auth` and `get_my_courses`. If Piazza is connected, call `check_piaz
 
 ## Operate and check isolation
 
+See [disk space](disk-space.md) for bounded container logs and optional Linux
+build-cache maintenance. These limits preserve user data and saved logins.
+
 ```sh
 npm run host -- status
 npm run host -- audit
