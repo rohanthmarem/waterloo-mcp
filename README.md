@@ -179,3 +179,10 @@ Release 0.4.0 adds portable authentication, single/multi-user hosting, remote lo
 - [Operations](docs/operations.md): updates, private backups, restarts, and recovery.
 - [Security](SECURITY.md), [errors](docs/errors.md), and [verification](docs/verification.md): protections, failure handling, and tested limits.
 - [Contributing](CONTRIBUTING.md): source checks and tests without school credentials.
+
+### Marmoset reads
+
+Use the existing Waterloo login to read current Marmoset courses, project deadlines,
+submission history and published test results. Start with `list_marmoset_courses`.
+See [Marmoset setup and tools](docs/marmoset.md). Submission and release-test actions
+are not exposed.

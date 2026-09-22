@@ -1,3 +1,4 @@
+import { Marmoset, marmosetTools, marmosetSchemas } from "./src/marmoset.mjs";
 import http from "node:http";
 import { ZodError } from "zod";
 import {
@@ -81,6 +82,7 @@ export function createGateway(
   {
     libcal = new LibCal(config),
     piazzaSession = new PiazzaSession(config),
+    marmoset = new Marmoset(config),
   } = {},
 ) {
   const racket = new RacketWorkspace(config);
@@ -423,6 +425,7 @@ export function createGateway(
           outlineTool,
           ...roomTools,
           ...piazzaTools,
+          ...marmosetTools,
           ...(racket.enabled() ? racketTools : []),
         ]
           .filter((t) => KNOWN_TOOLS.has(t.name))
@@ -514,17 +517,19 @@ export function createGateway(
                       },
                     ],
                   }
-                : Object.hasOwn(piazzaSchemas, name)
-                  ? await piazza.call(name, args)
-                  : roomSchemas[name]
-                    ? await libcal.call(name, args)
-                    : name === "get_course_outline"
-                      ? await getCourseOutline(await client(), args)
-                      : await (
-                          await client()
-                        ).callTool({ name, arguments: args }, undefined, {
-                          timeout: 180000,
-                        }),
+                : Object.hasOwn(marmosetSchemas, name)
+                  ? await marmoset.call(name, args)
+                  : Object.hasOwn(piazzaSchemas, name)
+                    ? await piazza.call(name, args)
+                    : roomSchemas[name]
+                      ? await libcal.call(name, args)
+                      : name === "get_course_outline"
+                        ? await getCourseOutline(await client(), args)
+                        : await (
+                            await client()
+                          ).callTool({ name, arguments: args }, undefined, {
+                            timeout: 180000,
+                          }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)

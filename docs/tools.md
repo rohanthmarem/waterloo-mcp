@@ -53,3 +53,14 @@ All four are available only when this user's runner is configured. Execution use
 Read operations can create temporary files, caches, transcripts, and updated login state as part of their operation. These internal files do not prompt for approval. Explicit saved downloads do. Study-room booking and cancellation are the only enabled external write actions. No course editing, assignment submission, or general messaging tool is enabled.
 
 Approvals match the tool, all arguments, and the requesting client. A changed argument, different agent, denied request, expired approval, or second use is rejected. An approval is consumed before the write begins. Racket checks its lock, revision, and runner health before consumption; an unchanged request can reuse a still-valid approval after those checks fail. Once a write or run starts, do not assume its approval is reusable. Inspect saved state after an uncertain result before requesting another approval.
+
+## Marmoset
+
+- `check_marmoset_auth`: check the current student's login.
+- `list_marmoset_courses`: discover current course IDs.
+- `list_marmoset_projects`: read projects, due dates, extensions and handout links.
+- `get_marmoset_project`: read submission history and published scores.
+- `get_marmoset_submission`: read existing detailed results and token availability.
+
+All five are read-only. See [Marmoset](marmoset.md) for arguments, pagination,
+limitations and errors. No submissions or release tests can be triggered.
