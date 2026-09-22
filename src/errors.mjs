@@ -1,6 +1,55 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  MARMOSET_AUTH_REQUIRED: [
+    401,
+    "Marmoset sign-in needs renewal.",
+    "Renew the owner\u2019s Waterloo session on its existing host; retry after the authentication cooldown.",
+    false,
+  ],
+  MARMOSET_IDENTITY_MISMATCH: [
+    403,
+    "Your own Marmoset student identity was not found unambiguously.",
+    "Check enrollment and the configured Waterloo username. No alternate identity was selected.",
+    false,
+  ],
+  MARMOSET_NO_COURSES: [
+    404,
+    "No current Marmoset courses were found.",
+    "Check your course enrollment in Marmoset. Archived terms are not supported.",
+    false,
+  ],
+  MARMOSET_NOT_FOUND: [
+    404,
+    "The requested course, project or submission is not listed for this user.",
+    "List courses and projects first, then use the IDs returned by those pages.",
+    false,
+  ],
+  MARMOSET_RESPONSE_CHANGED: [
+    502,
+    "Marmoset returned an unexpected page.",
+    "Open Marmoset directly and report the changed page layout. No empty result was inferred.",
+    false,
+  ],
+  MARMOSET_RESPONSE_TOO_LARGE: [
+    502,
+    "The Marmoset page exceeds the safe size limit.",
+    "Read the page directly in Marmoset.",
+    false,
+  ],
+  MARMOSET_ACCESS_DENIED: [
+    403,
+    "Marmoset denied access.",
+    "Check the student enrollment and permissions.",
+    false,
+  ],
+  MARMOSET_UNAVAILABLE: [
+    503,
+    "Marmoset could not be reached or read.",
+    "Retry later; check Marmoset availability and the browser runtime.",
+    true,
+  ],
+
   RACKET_STORAGE_UNAVAILABLE: [
     503,
     "Workspace storage could not be read or written.",
