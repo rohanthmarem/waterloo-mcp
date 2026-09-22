@@ -22,18 +22,22 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
     ]),
   );
   let writes = 0;
+  let catalogReads = 0;
   const worker = {
-    listTools: async () => ({
-      tools: [
-        "get_my_courses",
-        "get_course_home",
-        "download_file",
-        "delete_everything",
-      ].map((name) => ({
-        name,
-        inputSchema: { type: "object", properties: {} },
-      })),
-    }),
+    listTools: async () => (
+      catalogReads++,
+      {
+        tools: [
+          "get_my_courses",
+          "get_course_home",
+          "download_file",
+          "delete_everything",
+        ].map((name) => ({
+          name,
+          inputSchema: { type: "object", properties: {} },
+        })),
+      }
+    ),
     callTool: async ({ name }) => {
       if (name === "download_file") writes++;
       if (name === "get_course_home")
@@ -137,6 +141,34 @@ test("private MCP, exact approvals, client revocation, and error redaction", asy
       JSON.parse(piazzaInvalid.content[0].text).error.code,
       "INPUT_INVALID",
     );
+    await c.listTools();
+    await c.listTools();
+    assert.equal(catalogReads, 1);
+    const batch = await c.callTool({
+      name: "read_many",
+      arguments: {
+        requests: [{ name: "get_my_courses" }, { name: "list_piazza_classes" }],
+      },
+    });
+    assert.equal(batch.isError, undefined);
+    assert.equal(JSON.parse(batch.content[0].text).results.length, 2);
+    const forbiddenBatch = await c.callTool({
+      name: "read_many",
+      arguments: {
+        requests: [
+          { name: "get_my_courses" },
+          {
+            name: "download_file",
+            arguments: { downloadPath: "/state/downloads" },
+          },
+        ],
+      },
+    });
+    assert.equal(
+      JSON.parse(forbiddenBatch.content[0].text).error.code,
+      "BATCH_READ_ONLY",
+    );
+    assert.equal(writes, 0);
     const unknown = await c.callTool({
       name: "delete_everything",
       arguments: { approved: true },

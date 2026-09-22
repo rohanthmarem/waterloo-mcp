@@ -1,3 +1,5 @@
+import { batchReadTool, batchReads } from "./src/batch-reads.mjs";
+import { Odyssey } from "./src/odyssey.mjs";
 import { Marmoset, marmosetTools, marmosetSchemas } from "./src/marmoset.mjs";
 import http from "node:http";
 import { ZodError } from "zod";
@@ -83,6 +85,7 @@ export function createGateway(
     libcal = new LibCal(config),
     piazzaSession = new PiazzaSession(config),
     marmoset = new Marmoset(config),
+    odyssey = new Odyssey(config),
   } = {},
 ) {
   const racket = new RacketWorkspace(config);
@@ -92,9 +95,12 @@ export function createGateway(
   const portable =
     config.authMode === "portable" ? new PortableAuth(config) : null;
   let upstream;
+  let catalog;
+  let activeBatches = 0;
   async function client() {
     upstream ??= createClient().catch(() => {
       upstream = undefined;
+      catalog = undefined;
       throw new Error("UPSTREAM_UNAVAILABLE");
     });
     return upstream;
@@ -270,6 +276,7 @@ export function createGateway(
           if (upstream) {
             await (await upstream).close();
             upstream = undefined;
+            catalog = undefined;
           }
           return reply(res, 200, result);
         } catch (error) {
@@ -393,6 +400,7 @@ export function createGateway(
         if (upstream) {
           await (await upstream).close();
           upstream = undefined;
+          catalog = undefined;
         }
         return reply(
           res,
@@ -419,25 +427,43 @@ export function createGateway(
         { name: "waterloo-mcp", version: "0.4.0" },
         { capabilities: { tools: {} } },
       );
-      server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: [
-          ...(await (await client()).listTools()).tools,
-          outlineTool,
-          ...roomTools,
-          ...piazzaTools,
-          ...marmosetTools,
-          ...(racket.enabled() ? racketTools : []),
-        ]
-          .filter((t) => KNOWN_TOOLS.has(t.name))
-          .map(describeTool),
-      }));
-      server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
+      server.setRequestHandler(ListToolsRequestSchema, async () => {
+        catalog ??= (async () => ({
+          tools: [
+            ...(await (await client()).listTools()).tools,
+            outlineTool,
+            batchReadTool,
+            ...roomTools,
+            ...piazzaTools,
+            ...marmosetTools,
+            ...(racket.enabled() ? racketTools : []),
+          ]
+            .filter((t) => KNOWN_TOOLS.has(t.name))
+            .map(describeTool),
+        }))().catch((error) => {
+          catalog = undefined;
+          throw error;
+        });
+        return catalog;
+      });
+      const executeTool = async (params) => {
         const { name } = params;
         let args = { ...params.arguments };
         let authorizeRacket;
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
+        if (name === "read_many") {
+          if (activeBatches >= 2) return toolError("SERVICE_BUSY");
+          activeBatches++;
+          try {
+            return await batchReads(args, (childName, childArgs) =>
+              executeTool({ name: childName, arguments: childArgs }),
+            );
+          } finally {
+            activeBatches--;
+          }
+        }
         if (Object.hasOwn(racketSchemas, name)) {
           if (!racket.enabled()) return toolError("RACKET_DISABLED");
           try {
@@ -517,19 +543,21 @@ export function createGateway(
                       },
                     ],
                   }
-                : Object.hasOwn(marmosetSchemas, name)
-                  ? await marmoset.call(name, args)
-                  : Object.hasOwn(piazzaSchemas, name)
-                    ? await piazza.call(name, args)
-                    : roomSchemas[name]
-                      ? await libcal.call(name, args)
-                      : name === "get_course_outline"
-                        ? await getCourseOutline(await client(), args)
-                        : await (
-                            await client()
-                          ).callTool({ name, arguments: args }, undefined, {
-                            timeout: 180000,
-                          }),
+                : name === "get_odyssey_schedule"
+                  ? await odyssey.call(args)
+                  : Object.hasOwn(marmosetSchemas, name)
+                    ? await marmoset.call(name, args)
+                    : Object.hasOwn(piazzaSchemas, name)
+                      ? await piazza.call(name, args)
+                      : roomSchemas[name]
+                        ? await libcal.call(name, args)
+                        : name === "get_course_outline"
+                          ? await getCourseOutline(await client(), args)
+                          : await (
+                              await client()
+                            ).callTool({ name, arguments: args }, undefined, {
+                              timeout: 180000,
+                            }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
@@ -545,7 +573,10 @@ export function createGateway(
                   : "UPSTREAM_UNAVAILABLE",
           );
         }
-      });
+      };
+      server.setRequestHandler(CallToolRequestSchema, ({ params }) =>
+        executeTool(params),
+      );
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
@@ -569,6 +600,8 @@ export function createGateway(
     client().catch(() => {});
   });
   app.on("close", () => {
+    marmoset.close?.().catch(() => {});
+    odyssey.close?.().catch(() => {});
     upstream?.then((c) => c.close()).catch(() => {});
   });
   return app;

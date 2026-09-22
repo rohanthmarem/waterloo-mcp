@@ -1,9 +1,9 @@
-import { readFile } from "node:fs/promises";
+import { SessionHttp, SessionExpired } from "./session-http.mjs";
+import { htmlSnapshot } from "./html.mjs";
 import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { z } from "zod";
-import { decrypt } from "../upstream/build/auth/encrypted-store.js";
 import { withBrowser } from "../upstream/build/utils/browser-pool.js";
 import { root, workerEnv } from "./config.mjs";
 import { toolError } from "./errors.mjs";
@@ -134,26 +134,6 @@ export function normalizeSnapshot(raw) {
     links: [...new Map(links.map((l) => [l.url, l])).values()],
   };
 }
-async function snapshot(page) {
-  const raw = await page.locator("body").evaluate((node) => {
-    const clone = node.cloneNode(true);
-    clone
-      .querySelectorAll("script,style,form,input,button,textarea")
-      .forEach((n) => n.remove());
-    return {
-      text: clone.textContent.replace(/\s*\n\s*/g, "\n").trim(),
-      links: [...clone.querySelectorAll("a[href]")].map((a) => ({
-        text: a.textContent,
-        href: a.getAttribute("href"),
-      })),
-    };
-  });
-  // innerText keeps test output and table columns legible. Inputs/hidden values
-  // are never copied; authenticated pages with forms use the stripped clone.
-  if ((await page.locator("form,input,textarea").count()) === 0)
-    raw.text = await page.locator("body").innerText();
-  return normalizeSnapshot(raw);
-}
 const exec = promisify(execFile);
 export class Marmoset {
   constructor(
@@ -173,36 +153,17 @@ export class Marmoset {
     this.renew = renew;
     this.pending = 0;
     this.queue = Promise.resolve();
-  }
-  async state() {
-    let key;
-    try {
-      key = Buffer.from(
-        (
-          await readFile(
-            path.join(this.config.secretsDir, "session-key"),
-            "utf8",
-          )
-        ).trim(),
-        "hex",
-      );
-      return JSON.parse(
-        decrypt(
-          JSON.parse(
-            await readFile(
-              path.join(this.config.stateDir, "browser.json"),
-              "utf8",
-            ),
-          ),
-          key,
-          "waterloo-browser:v1",
+    this.http = new SessionHttp(config, {
+      origin: ORIGIN,
+      allowed: (u) =>
+        ["/view/index.jsp", ...Object.values(pages).map(([p]) => p)].includes(
+          u.pathname.replace(/;jsessionid=[^/;]*/gi, ""),
         ),
-      );
-    } catch {
-      fail("MARMOSET_AUTH_REQUIRED");
-    } finally {
-      key?.fill(0);
-    }
+      authenticated: (html) =>
+        html.includes("/authenticate/Logout") &&
+        html.includes(config.username.split("@")[0]),
+      bootstrap: (state) => this.bootstrap(state),
+    });
   }
   async visit(page, url) {
     const r = await page.goto(url, {
@@ -220,8 +181,7 @@ export class Marmoset {
     )
       fail("MARMOSET_AUTH_REQUIRED");
   }
-  async read(name, args) {
-    const state = await this.state();
+  async bootstrap(state) {
     return this.browse(async (browser) => {
       const context = await browser.newContext({
         storageState: state,
@@ -270,7 +230,26 @@ export class Marmoset {
           !(await page.locator('a[href*="/authenticate/Logout"]').count())
         )
           fail("MARMOSET_AUTH_REQUIRED");
-        const home = await snapshot(page);
+        return await context.storageState();
+      } finally {
+        await context.close();
+      }
+    });
+  }
+  close() {
+    return this.http.close();
+  }
+  async read(name, args) {
+    try {
+      return await this.http.run(async (get) => {
+        const read = async (url) => {
+          const response = await get(url);
+          return {
+            ...normalizeSnapshot(htmlSnapshot(response.html)),
+            url: response.url,
+          };
+        };
+        const home = await read("/view/index.jsp");
         const courses = home.links.filter((l) => l.kind === "course");
         if (!courses.length) fail("MARMOSET_NO_COURSES");
         if (name === "check_marmoset_auth")
@@ -286,16 +265,14 @@ export class Marmoset {
           };
         const course = courses.find((c) => c.id === args.courseId);
         if (!course) fail("MARMOSET_NOT_FOUND");
-        await this.visit(page, course.url);
-        let data = await snapshot(page);
+        let data = await read(course.url);
         if (!data.text.includes("Projects")) fail("MARMOSET_RESPONSE_CHANGED");
         if (name !== "list_marmoset_projects") {
           const project = data.links.find(
             (l) => l.kind === "project" && l.id === args.projectId,
           );
           if (!project) fail("MARMOSET_NOT_FOUND");
-          await this.visit(page, project.url);
-          data = await snapshot(page);
+          data = await read(project.url);
           if (!data.text.includes("Submissions"))
             fail("MARMOSET_RESPONSE_CHANGED");
           if (name === "get_marmoset_submission") {
@@ -303,18 +280,19 @@ export class Marmoset {
               (l) => l.kind === "submission" && l.id === args.submissionId,
             );
             if (!submission) fail("MARMOSET_NOT_FOUND");
-            await this.visit(page, submission.url);
-            data = await snapshot(page);
+            data = await read(submission.url);
             if (!/Test Results|not yet|pending|queued/i.test(data.text))
               fail("MARMOSET_RESPONSE_CHANGED");
           }
         }
-        // Page the whole serialized document, including IDs and links, so large
-        // histories never produce an unbounded response or silently omit links.
-        const document = JSON.stringify(data, null, 2);
+        const document = JSON.stringify(
+          { text: data.text, links: data.links },
+          null,
+          2,
+        );
         const end = Math.min(document.length, args.offset + args.maxChars);
         return {
-          source: readLink(page.url())?.url,
+          source: readLink(data.url)?.url,
           format: "json-text",
           contentIsUntrusted: true,
           timezone: "America/Toronto",
@@ -324,10 +302,11 @@ export class Marmoset {
           offset: args.offset,
           nextOffset: end < document.length ? end : null,
         };
-      } finally {
-        await context.close();
-      }
-    });
+      });
+    } catch (error) {
+      if (error instanceof SessionExpired) fail("MARMOSET_AUTH_REQUIRED");
+      throw error;
+    }
   }
   async call(name, input) {
     if (!Object.hasOwn(marmosetSchemas, name))

@@ -186,3 +186,10 @@ Use the existing Waterloo login to read current Marmoset courses, project deadli
 submission history and published test results. Start with `list_marmoset_courses`.
 See [Marmoset setup and tools](docs/marmoset.md). Submission and release-test actions
 are not exposed.
+
+### Fewer round trips
+
+Use `read_many` to combine independent reads across services. Marmoset and Odyssey
+reuse per-user HTTP sessions after scripted sign-in, and `read_course_file` opens
+linked LEARN documents using the existing login. See [fast reads](docs/fast-reads.md)
+for measured speedups and limits.

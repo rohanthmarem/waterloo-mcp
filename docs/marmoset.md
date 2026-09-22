@@ -21,8 +21,11 @@ change between calls; restart pagination if a submission changes. Times are
 preserved as published in Waterloo local time. Missing years and scores are not
 inferred. Handout links are returned, not fetched.
 
-Only your configured student identity is selected. Each read uses an isolated
-browser context and closes it afterward. Course, project and submission IDs must
+Only your configured student identity is selected. Login uses an isolated
+browser context and closes it afterward. Reads then use a per-user HTTP cookie jar
+kept only in memory (five-minute idle expiry, thirty-minute maximum age). Every
+call checks the encrypted source session; session replacement invalidates the jar.
+Pages are fetched fresh, not cached between calls. Course, project and submission IDs must
 appear in the preceding authenticated page. Session IDs, forms and hidden inputs
 are omitted from results. Navigation blocks submission, download, logout and
 release-test actions. No new Marmoset cookies or downloaded files are stored.

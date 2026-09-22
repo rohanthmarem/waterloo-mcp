@@ -64,3 +64,13 @@ Approvals match the tool, all arguments, and the requesting client. A changed ar
 
 All five are read-only. See [Marmoset](marmoset.md) for arguments, pagination,
 limitations and errors. No submissions or release tests can be triggered.
+
+## Read multiple resources
+
+`read_many` runs up to eight independent reads in one MCP request, with three at
+a time. Writes and downloads are rejected before any action starts. See
+[fast reads](fast-reads.md) for examples, limits and measurements.
+
+`read_course_file` reads authenticated files linked inside LEARN course pages
+without saving them. [Linked-file guidance](learn-linked-files.md) explains why
+an agent should use this instead of opening a bare browser link.

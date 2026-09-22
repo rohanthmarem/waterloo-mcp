@@ -29,6 +29,7 @@
     "test:racket:runner": "node tests/racket-runner.mjs"
   },
   "dependencies": {
+    "@mixmark-io/domino": "2.2.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@napi-rs/keyring": "^2.0.0",
     "ajv": "^8.18.0",
