@@ -26,7 +26,8 @@
     "host": "node scripts/host.mjs",
     "owner": "node scripts/owner.mjs",
     "test:hosting:containers": "node tests/host-containers.mjs",
-    "test:racket:runner": "node tests/racket-runner.mjs"
+    "test:racket:runner": "node tests/racket-runner.mjs",
+    "test:crowdmark:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/crowdmark-browser.test.mjs"
   },
   "dependencies": {
     "@mixmark-io/domino": "2.2.0",

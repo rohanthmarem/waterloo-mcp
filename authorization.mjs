@@ -2,7 +2,11 @@ import { mkdir, readFile, writeFile, rename, open } from "node:fs/promises";
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import path from "node:path";
 import { racketWriteTools } from "./src/racket-workspace.mjs";
+import { crowdmarkWriteTools } from "./src/crowdmark.mjs";
 export const READ_TOOLS = new Set([
+  "check_crowdmark_auth",
+  "list_crowdmark_assignments",
+  "get_crowdmark_assignment",
   "read_course_file",
   "check_marmoset_auth",
   "list_marmoset_courses",
@@ -53,6 +57,7 @@ export const KNOWN_TOOLS = new Set([
   "download_file",
   ...ROOM_WRITE_TOOLS,
   ...racketWriteTools,
+  ...crowdmarkWriteTools,
 ]);
 const stable = (v) =>
   v === null || typeof v !== "object"
@@ -137,11 +142,25 @@ export class Authorizations {
   }
   async page(id) {
     const r = await this.read(id);
-    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p>${r.summary?.sourceCode !== undefined ? `<h2>Program to save or run</h2><pre>${escape(r.summary.sourceCode)}</pre>` : ""}${r.summary ? `<h2>Review the exact action</h2><pre>${escape(JSON.stringify(r.summary, null, 2))}</pre>` : ""}<pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
+    return `<!doctype html><html><meta name="viewport" content="width=device-width"><title>Approve MCP action</title><h1>Review MCP action</h1><p>Tool: <strong>${escape(r.name)}</strong></p><p>This action creates or changes saved data. Approve only if you want these exact parameters executed once.</p>${r.summary?.sourceCode !== undefined ? `<h2>Program to save or run</h2><pre>${escape(r.summary.sourceCode)}</pre>` : ""}${(
+      r.summary?.changes ?? []
+    )
+      .flatMap((c) =>
+        (c.photos ?? []).map((f) => ({ ...f, questionLabel: c.label })),
+      )
+      .filter((f) => /^\/crowdmark\/files\/[a-f0-9]{48}$/.test(f.previewPath))
+      .map(
+        (f) =>
+          `<figure><img style="max-width:100%" src="${escape(f.previewPath)}" alt="${escape(f.filename)}"><figcaption>${escape(f.questionLabel)}: ${escape(f.filename)} — ${escape(f.sha256)}</figcaption></figure>`,
+      )
+      .join(
+        "",
+      )}${r.summary ? `<h2>Review the exact action</h2><pre>${escape(JSON.stringify(r.summary, null, 2))}</pre>` : ""}<pre>${escape(JSON.stringify(r.args, null, 2))}</pre><p>Status: ${escape(r.status)}. Expires: ${escape(new Date(r.expiresAt).toISOString())}</p>${r.status === "pending" && Date.now() < r.expiresAt ? `<form method="post"><input type="hidden" name="nonce" value="${r.nonce}"><button name="decision" value="approve">Approve this action once</button><button name="decision" value="deny">Deny</button></form>` : ""}</html>`;
   }
 }
 export function needsApproval(name, args) {
   return (
+    crowdmarkWriteTools.includes(name) ||
     racketWriteTools.includes(name) ||
     ROOM_WRITE_TOOLS.has(name) ||
     name === "download_file" ||
@@ -166,11 +185,13 @@ export function describeTool(t) {
     annotations: {
       ...t.annotations,
       readOnlyHint:
+        !crowdmarkWriteTools.includes(t.name) &&
         !racketWriteTools.includes(t.name) &&
         !ROOM_WRITE_TOOLS.has(t.name) &&
         t.name !== "download_file" &&
         t.name !== "get_syllabus",
       destructiveHint:
+        crowdmarkWriteTools.includes(t.name) ||
         racketWriteTools.includes(t.name) ||
         ROOM_WRITE_TOOLS.has(t.name) ||
         t.name === "download_file" ||
@@ -181,11 +202,14 @@ export function describeTool(t) {
       "get_syllabus",
       ...ROOM_WRITE_TOOLS,
       ...racketWriteTools,
+      ...crowdmarkWriteTools,
     ].includes(t.name)
       ? {
           description:
             t.description +
-            (ROOM_WRITE_TOOLS.has(t.name) || racketWriteTools.includes(t.name)
+            (crowdmarkWriteTools.includes(t.name) ||
+            ROOM_WRITE_TOOLS.has(t.name) ||
+            racketWriteTools.includes(t.name)
               ? " This action requires explicit owner approval. Open the returned approval URL for the owner and retry the exact arguments with authorizationId only after approval."
               : " Saving a file requires explicit user approval at the returned approval URL. Retry with the returned authorizationId only after the user approves. Downloads must use /state/downloads."),
           inputSchema: {

@@ -1,6 +1,91 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  CROWDMARK_AUTH_REQUIRED: [
+    401,
+    "Crowdmark needs a valid Waterloo login.",
+    "Renew your encrypted Waterloo session on this host, then retry.",
+    false,
+  ],
+  CROWDMARK_IDENTITY_MISMATCH: [
+    403,
+    "Crowdmark signed in to a different or unknown identity.",
+    "Check the configured Waterloo account. No assignment was changed.",
+    false,
+  ],
+  CROWDMARK_RESPONSE_CHANGED: [
+    502,
+    "Crowdmark returned an unexpected response or changed its page layout.",
+    "Open Crowdmark directly and report the changed page. No empty result was inferred.",
+    false,
+  ],
+  CROWDMARK_NOT_FOUND: [
+    404,
+    "This Crowdmark assignment was not found.",
+    "List your assignments and use a returned assessmentId.",
+    false,
+  ],
+  CROWDMARK_WRITE_BLOCKED: [
+    409,
+    "This assignment cannot be edited through the MCP.",
+    "Use an open, untimed, individual assignment that is not submitted or graded. Late work, timed tests, group work and resubmissions require the Crowdmark website.",
+    false,
+  ],
+  CROWDMARK_CHANGED: [
+    409,
+    "The assignment changed since you reviewed it.",
+    "Read the current assignment and request a new approval using its new revision. No further changes were made.",
+    false,
+  ],
+  CROWDMARK_OUTCOME_UNKNOWN: [
+    409,
+    "The action may have saved some or all changes, but completion could not be verified.",
+    "Do not retry automatically. Read the assignment or open Crowdmark, reconcile the saved answers, and request approval only for missing work.",
+    false,
+  ],
+  CROWDMARK_ACTION_USED: [
+    409,
+    "This action ID has already been attempted.",
+    "Read the assignment before requesting a different action. The previous request was not repeated.",
+    false,
+  ],
+  CROWDMARK_SOLO_CONFIRMATION_REQUIRED: [
+    409,
+    "The instructor enabled groups for this assignment.",
+    "To submit alone, set confirmSoloGroup to true and review the separate owner approval. Actual multi-person groups are not supported.",
+    false,
+  ],
+  CROWDMARK_INCOMPLETE: [
+    409,
+    "At least one question has no saved answer.",
+    "Read the assignment and save the missing answers before requesting submission.",
+    false,
+  ],
+  CROWDMARK_FILE_INVALID: [
+    400,
+    "The photo or transfer ticket is missing, expired, used, or does not match this client and the approved bytes.",
+    "Use a new approved ticket with the exact filename, MIME type, size and SHA-256. Only JPEG and PNG are supported.",
+    false,
+  ],
+  CROWDMARK_STORAGE_FULL: [
+    507,
+    "Crowdmark staging or operation storage reached its limit.",
+    "Wait for staged photos to expire, or ask the host owner to review storage. Do not delete submitted work.",
+    false,
+  ],
+  CROWDMARK_STORAGE_UNAVAILABLE: [
+    503,
+    "Encrypted Crowdmark storage could not be accessed.",
+    "Check this user’s state directory, encryption key and free disk space.",
+    false,
+  ],
+  CROWDMARK_UNAVAILABLE: [
+    503,
+    "Crowdmark could not be reached or read.",
+    "Check connectivity and the browser runtime, then retry a read. Do not blindly retry an upload or submission.",
+    false,
+  ],
+
   BATCH_READ_ONLY: [
     400,
     "The batch contains an unsupported or write-capable request.",

@@ -193,3 +193,11 @@ Use `read_many` to combine independent reads across services. Marmoset and Odyss
 reuse per-user HTTP sessions after scripted sign-in, and `read_course_file` opens
 linked LEARN documents using the existing login. See [fast reads](docs/fast-reads.md)
 for measured speedups and limits.
+
+### Crowdmark answer photos
+
+Use the same Waterloo login to read Crowdmark assignments and questions, map your
+answer photos to questions, and save photos or typed answers after approval.
+Submitting for evaluation requires a separate approval. Images stay encrypted on
+the MCP host and expire after 24 hours. See [the Crowdmark workflow](docs/crowdmark.md)
+for transfer instructions, supported assignments and live-test status.
