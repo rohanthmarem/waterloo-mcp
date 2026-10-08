@@ -1,6 +1,6 @@
 # Tools and read coverage
 
-The gateway uses an explicit allowlist. New upstream tools are blocked until reviewed and added to `authorization.mjs`. Use `tools/list` to get each tool’s current input schema. There are 34 core tools. Enabling Racket for a user adds four tools, for a total of 38.
+The gateway uses an explicit allowlist. New upstream tools are blocked until reviewed and added to `authorization.mjs`. Use `tools/list` to get each tool’s current input schema. There are 47 core tools. Enabling Racket for a user adds four tools, for a total of 51.
 
 | Area                 | Tools                                                                                                                             | What they read                                                                                                  |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -43,14 +43,14 @@ All four are available only when this user's runner is configured. Execution use
 - Transcription streams a file to temporary storage, with a 512 MiB limit and a two-minute download timeout. Each request covers 10–600 seconds. One job runs at a time; repeat the same arguments to check progress. Failed jobs can be retried after one minute.
 - The speech model downloads on first use. Media stays on the VM; no transcription provider receives it. The generated text can misread math and technical terms.
 - Transcripts and downloaded course files are stored as ordinary private files. Authentication state is encrypted separately. Manage retention yourself.
-- Reading a resource can cause the school’s ordinary view/access tracking. The server does not intentionally post replies, change grades, submit work, or send messages.
+- Reading a resource can cause the school’s ordinary view/access tracking. Read tools do not post replies, change grades, submit work, or send messages. Crowdmark writes require separate approval.
 - Outlook, Teams, Quest, external publisher tools, and arbitrary websites are not included.
 
 ## Approval rules
 
-`book_study_room`, `cancel_study_room_booking`, `download_file`, `save_racket_workspace`, and `run_racket_workspace` always need agent approval. Room approval includes the resolved room name, library, date, start and end times, and terms notice. `get_syllabus` needs approval only when `downloadPath` is present. Downloads must stay under `/state/downloads`.
+`book_study_room`, `cancel_study_room_booking`, `download_file`, `save_racket_workspace`, `run_racket_workspace`, `create_crowdmark_upload`, `save_crowdmark_answers`, and `submit_crowdmark_assignment` always need owner approval. Room approval includes the resolved room name, library, date, start and end times, and terms notice. `get_syllabus` needs approval only when `downloadPath` is present. Downloads must stay under `/state/downloads`.
 
-Read operations can create temporary files, caches, transcripts, and updated login state as part of their operation. These internal files do not prompt for approval. Explicit saved downloads do. Study-room booking and cancellation are the only enabled external write actions. No course editing, assignment submission, or general messaging tool is enabled.
+Read operations can create temporary files, caches, transcripts, and updated login state as part of their operation. These internal files do not prompt for approval. Explicit saved downloads do. Study-room booking/cancellation and the explicitly approved Crowdmark answer/submission tools are enabled external writes. No general course editing or messaging tool is enabled.
 
 Approvals match the tool, all arguments, and the requesting client. A changed argument, different agent, denied request, expired approval, or second use is rejected. An approval is consumed before the write begins. Racket checks its lock, revision, and runner health before consumption; an unchanged request can reuse a still-valid approval after those checks fail. Once a write or run starts, do not assume its approval is reusable. Inspect saved state after an uncertain result before requesting another approval.
 
@@ -74,3 +74,9 @@ a time. Writes and downloads are rejected before any action starts. See
 `read_course_file` reads authenticated files linked inside LEARN course pages
 without saving them. [Linked-file guidance](learn-linked-files.md) explains why
 an agent should use this instead of opening a bare browser link.
+
+## Crowdmark
+
+Three read tools discover assignments and read questions/saved work. Three approved
+write tools stage exact photos, save question answers and submit separately. See
+[Crowdmark setup, photo transfer, limits and verification](crowdmark.md).

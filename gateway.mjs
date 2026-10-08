@@ -1,3 +1,9 @@
+import {
+  Crowdmark,
+  crowdmarkTools,
+  crowdmarkSchemas,
+} from "./src/crowdmark.mjs";
+import { CrowdmarkError } from "./src/crowdmark-files.mjs";
 import { batchReadTool, batchReads } from "./src/batch-reads.mjs";
 import { Odyssey } from "./src/odyssey.mjs";
 import { Marmoset, marmosetTools, marmosetSchemas } from "./src/marmoset.mjs";
@@ -59,7 +65,7 @@ function reply(res, status, data, type = "application/json") {
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
     "Content-Security-Policy":
-      "default-src 'none'; form-action 'self'; frame-ancestors 'none'",
+      "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
   });
   res.end(typeof data === "string" ? data : JSON.stringify(data));
 }
@@ -86,6 +92,7 @@ export function createGateway(
     piazzaSession = new PiazzaSession(config),
     marmoset = new Marmoset(config),
     odyssey = new Odyssey(config),
+    crowdmark = new Crowdmark(config),
   } = {},
 ) {
   const racket = new RacketWorkspace(config);
@@ -173,7 +180,14 @@ export function createGateway(
           }
           return httpError(res, "AUTH_REQUIRED");
         }
-        if (identity.role === "mcp" && !["/mcp", "/status"].includes(req.url))
+        if (
+          identity.role === "mcp" &&
+          !(
+            ["/mcp", "/status"].includes(req.url) ||
+            (req.method === "PUT" &&
+              /^\/crowdmark\/uploads\/[a-f0-9]{48}$/.test(req.url))
+          )
+        )
           return httpError(res, "CLIENT_REVOKED");
         caller = identity.id;
       } else {
@@ -201,13 +215,67 @@ export function createGateway(
             )
           )
             return httpError(res, "CLIENT_REVOKED");
-          if (!["/mcp", "/status"].includes(req.url))
+          if (
+            !(
+              ["/mcp", "/status"].includes(req.url) ||
+              (req.method === "PUT" &&
+                /^\/crowdmark\/uploads\/[a-f0-9]{48}$/.test(req.url))
+            )
+          )
             return httpError(res, "CLIENT_REVOKED");
           caller = ctx.id;
         }
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (
+        /^\/crowdmark\/uploads\/[a-f0-9]{48}$/.test(req.url) &&
+        req.method === "PUT"
+      ) {
+        if (caller === "owner-browser" && req.headers.origin !== config.origin)
+          return httpError(res, "ORIGIN_REJECTED");
+        try {
+          return reply(
+            res,
+            200,
+            await crowdmark.files.receive(
+              req.url.split("/").pop(),
+              caller,
+              req,
+            ),
+          );
+        } catch (e) {
+          return httpError(
+            res,
+            e instanceof CrowdmarkError
+              ? e.code
+              : "CROWDMARK_STORAGE_UNAVAILABLE",
+          );
+        }
+      }
+      if (
+        /^\/crowdmark\/files\/[a-f0-9]{48}$/.test(req.url) &&
+        req.method === "GET"
+      ) {
+        // Client tokens cannot reach this owner-only preview route.
+        try {
+          const file = await crowdmark.files.get(req.url.split("/").pop());
+          res.writeHead(200, {
+            "Content-Type": file.mimeType,
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'",
+          });
+          return res.end(file.bytes);
+        } catch (e) {
+          return httpError(
+            res,
+            e instanceof CrowdmarkError
+              ? e.code
+              : "CROWDMARK_STORAGE_UNAVAILABLE",
+          );
+        }
+      }
       if (req.url.startsWith("/racket")) {
         if (!racket.enabled()) return httpError(res, "RACKET_DISABLED");
         const files = {
@@ -436,6 +504,7 @@ export function createGateway(
             ...roomTools,
             ...piazzaTools,
             ...marmosetTools,
+            ...crowdmarkTools,
             ...(racket.enabled() ? racketTools : []),
           ]
             .filter((t) => KNOWN_TOOLS.has(t.name))
@@ -450,6 +519,7 @@ export function createGateway(
         const { name } = params;
         let args = { ...params.arguments };
         let authorizeRacket;
+        let authorizeCrowdmark;
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
@@ -468,6 +538,13 @@ export function createGateway(
           if (!racket.enabled()) return toolError("RACKET_DISABLED");
           try {
             args = racketSchemas[name].parse(args);
+          } catch {
+            return toolError("INPUT_INVALID");
+          }
+        }
+        if (Object.hasOwn(crowdmarkSchemas, name)) {
+          try {
+            args = crowdmarkSchemas[name].parse(args);
           } catch {
             return toolError("INPUT_INVALID");
           }
@@ -508,6 +585,17 @@ export function createGateway(
                 );
               }
             }
+            if (Object.hasOwn(crowdmarkSchemas, name)) {
+              try {
+                summary = await crowdmark.preview(name, args, caller);
+              } catch (e) {
+                return toolError(
+                  e instanceof CrowdmarkError
+                    ? e.code
+                    : "CROWDMARK_UNAVAILABLE",
+                );
+              }
+            }
             const id = await approvals.request(name, args, caller, summary);
             return toolError("APPROVAL_REQUIRED", {
               ...(summary ? { summary } : {}),
@@ -522,6 +610,19 @@ export function createGateway(
                   await approvals.consume(authorizationId, name, args, caller);
                 } catch {
                   throw new RacketError("APPROVAL_INVALID");
+                }
+              };
+            else if (Object.hasOwn(crowdmarkSchemas, name))
+              authorizeCrowdmark = async (summary) => {
+                try {
+                  const approved = await approvals.read(authorizationId);
+                  if (
+                    JSON.stringify(approved.summary) !== JSON.stringify(summary)
+                  )
+                    throw new Error("changed");
+                  await approvals.consume(authorizationId, name, args, caller);
+                } catch {
+                  throw new CrowdmarkError("APPROVAL_INVALID");
                 }
               };
             else await approvals.consume(authorizationId, name, args, caller);
@@ -543,21 +644,23 @@ export function createGateway(
                       },
                     ],
                   }
-                : name === "get_odyssey_schedule"
-                  ? await odyssey.call(args)
-                  : Object.hasOwn(marmosetSchemas, name)
-                    ? await marmoset.call(name, args)
-                    : Object.hasOwn(piazzaSchemas, name)
-                      ? await piazza.call(name, args)
-                      : roomSchemas[name]
-                        ? await libcal.call(name, args)
-                        : name === "get_course_outline"
-                          ? await getCourseOutline(await client(), args)
-                          : await (
-                              await client()
-                            ).callTool({ name, arguments: args }, undefined, {
-                              timeout: 180000,
-                            }),
+                : Object.hasOwn(crowdmarkSchemas, name)
+                  ? await crowdmark.call(name, args, caller, authorizeCrowdmark)
+                  : name === "get_odyssey_schedule"
+                    ? await odyssey.call(args)
+                    : Object.hasOwn(marmosetSchemas, name)
+                      ? await marmoset.call(name, args)
+                      : Object.hasOwn(piazzaSchemas, name)
+                        ? await piazza.call(name, args)
+                        : roomSchemas[name]
+                          ? await libcal.call(name, args)
+                          : name === "get_course_outline"
+                            ? await getCourseOutline(await client(), args)
+                            : await (
+                                await client()
+                              ).callTool({ name, arguments: args }, undefined, {
+                                timeout: 180000,
+                              }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
@@ -600,6 +703,7 @@ export function createGateway(
     client().catch(() => {});
   });
   app.on("close", () => {
+    crowdmark.close?.().catch(() => {});
     marmoset.close?.().catch(() => {});
     odyssey.close?.().catch(() => {});
     upstream?.then((c) => c.close()).catch(() => {});

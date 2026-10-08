@@ -80,7 +80,11 @@ describe("native session key stability", () => {
         },
         async setPassword(service, account, key) {
           await fs.appendFile(path.join(dir, 'dummy-native-writes'), 'write\\n');
-          await fs.writeFile(keyFile, key);
+          // Native credential-store reads return a whole entry, never a partial
+          // filesystem write. Publish the fake entry atomically to match that.
+          const pending = keyFile + '.' + process.pid + '.pending';
+          await fs.writeFile(pending, key);
+          await fs.rename(pending, keyFile);
         },
         async deletePassword() {},
       };

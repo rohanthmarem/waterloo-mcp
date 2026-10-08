@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Halve the runtime image (4.13 GB to 2.14 GB) by running on Ubuntu 24.04 with only the Chromium headless shell, and build its font cache.
+- Load Playwright on first use in the Crowdmark session again, cutting gateway idle memory by about 40 MiB and its start by half.
+- Keep the worker about 90 MiB smaller under sustained reads with a 4 MiB V8 young generation; reap exited Chromium helpers with `init: true`; check health without starting Node.
+
 - Update setup, agent connection, operations, security, and troubleshooting guides for portable hosting and optional Racket. Add a portable client configuration example.
 
 - Optional MCP-controlled Racket workspaces with encrypted code, assignment text, saved revisions, and bounded run output.
