@@ -2,6 +2,8 @@ services:
   mcp:
     build: .
     restart: unless-stopped
+    # Reaps Chromium helpers that exit after their parent, instead of leaving zombies under node.
+    init: true
     logging:
       driver: local
       options:

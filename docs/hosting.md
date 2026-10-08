@@ -6,7 +6,7 @@ Use one Docker-capable computer or server. Choose **single** for one Waterloo ac
 
 - Node.js 22+, Git, Docker Engine with Compose v2 on Linux, or Docker Desktop/another Linux container runtime on macOS or Windows. On Windows, run these commands inside WSL2 and keep private files in its Linux filesystem, where restrictive file permissions work.
 - Budget several GB for the image and at least 2 GB RAM per active user, plus memory for the host. The generated configuration limits each container to 2 CPUs, 2 GB RAM, and 512 processes. Large transcription jobs may need a reviewed limit change; an audit rejects manual changes until the generator is updated to match.
-- The pinned Playwright base image supplies Linux AMD64 and ARM64 variants. The complete application still needs platform-compatible transcription dependencies. See [verification](verification.md) for the platforms actually tested; do not interpret a manifest entry as an end-to-end ARM test.
+- The pinned Playwright build image and Ubuntu 24.04 runtime image both supply Linux AMD64 and ARM64 variants. The complete application still needs platform-compatible transcription dependencies. See [verification](verification.md) for the platforms actually tested; do not interpret a manifest entry as an end-to-end ARM test.
 - A browser-capable computer for the initial Waterloo/Duo login. A headless server receives that login through the owner-authenticated HTTPS import described below. Phones and tablets can use the owner pages but are not supported as Docker hosts or login-CLI devices.
 - For remote access, use a hostname and HTTPS reverse proxy, such as Caddy. No exe.dev account or SSH signing key is needed for portable mode.
 

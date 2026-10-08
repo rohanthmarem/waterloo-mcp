@@ -1,4 +1,3 @@
-import { request } from "playwright";
 import { withBrowser } from "../upstream/build/utils/browser-pool.js";
 import { loadBrowserSession } from "./session-http.mjs";
 import { cmFail, CrowdmarkError } from "./crowdmark-files.mjs";
@@ -17,7 +16,9 @@ export class CrowdmarkSession {
     {
       browse = withBrowser,
       load = () => loadBrowserSession(config),
-      createContext = (options) => request.newContext(options),
+      // Loaded on first use: playwright adds about 40 MiB to the resident gateway.
+      createContext = async (options) =>
+        (await import("playwright")).request.newContext(options),
     } = {},
   ) {
     this.config = config;
