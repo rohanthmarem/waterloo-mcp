@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add five read-only Outlook tools for mail forwarded from Waterloo Outlook: status, list, search, full message text, and attachment text.
+- Add a Cloudflare Email Worker example and a `POST /ingest/mail` route. Issue its token with `--mail-ingest`; it can only deliver mail, and agent or owner credentials cannot.
+- Record DKIM results on each message, with an optional owner policy that requires a trusted signer. Reject signature floods, partial-body signatures, and repeated identity headers. Never bounce mail, so the forwarding address is not revealed to senders.
+- Encrypt messages, bodies, and the index with the session key. Keep at most 5,000 messages or 2 GiB.
+- Add an owner page at `/setup/outlook` showing recent deliveries (signing domains only) and the signer policy.
+- Cap decompressed Office document parts at 32 MiB, for both email attachments and course files.
+
 - Halve the runtime image (4.13 GB to 2.14 GB) by running on Ubuntu 24.04 with only the Chromium headless shell, and build its font cache.
 - Load Playwright on first use in the Crowdmark session again, cutting gateway idle memory by about 40 MiB and its start by half.
 - Keep the worker about 90 MiB smaller under sustained reads with a 4 MiB V8 young generation; reap exited Chromium helpers with `init: true`; check health without starting Node.

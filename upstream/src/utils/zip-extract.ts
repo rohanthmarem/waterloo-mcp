@@ -30,6 +30,8 @@ const ZIP64_MARKER = 0xffffffff;
 
 const METHOD_STORED = 0;
 const METHOD_DEFLATE = 8;
+// Office XML parts are far smaller; this also caps a PowerPoint's total text below.
+const MAX_ENTRY_BYTES = 32 * 1024 * 1024;
 
 interface CentralEntry {
   name: string;
@@ -102,7 +104,8 @@ function readEntryData(buffer: Buffer, entry: CentralEntry): Buffer | null {
   if (entry.method !== METHOD_DEFLATE) return null;
 
   try {
-    return inflateRawSync(raw);
+    // Bound decompression so a small archive cannot expand into gigabytes.
+    return inflateRawSync(raw, { maxOutputLength: MAX_ENTRY_BYTES });
   } catch {
     return null;
   }
@@ -172,7 +175,15 @@ export function officeDocumentText(buffer: Buffer): string | null {
     const slides = names
       .filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))
       .sort((a, b) => slideNumber(a) - slideNumber(b));
-    text = slides.map(read).filter(Boolean).join("\n\n");
+    const parts: string[] = [];
+    let size = 0;
+    for (const slide of slides) {
+      if (size > MAX_ENTRY_BYTES) break;
+      const part = read(slide);
+      if (part) parts.push(part);
+      size += part.length;
+    }
+    text = parts.join("\n\n");
   } else {
     return null;
   }

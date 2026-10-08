@@ -19,6 +19,7 @@ The gateway uses an explicit allowlist. New upstream tools are blocked until rev
 | Odyssey              | `get_odyssey_schedule`                                                                                                            | Assessment schedule visible in the student portal                                                               |
 | Study rooms          | `list_study_rooms`, `get_study_room_availability`, `book_study_room`, `get_study_room_bookings`, `cancel_study_room_booking`      | Room discovery, availability, approved booking/cancellation, and this MCP’s booking records                     |
 | Piazza               | `check_piazza_auth`, `list_piazza_classes`, `get_piazza_course_info`, `get_piazza_feed`, `search_piazza_posts`, `get_piazza_post` | Class lists, published information, feeds, search, and full current discussions; see [Piazza limits](piazza.md) |
+| Outlook mail         | `check_outlook_mail`, `list_outlook_messages`, `search_outlook_messages`, `get_outlook_message`, `read_outlook_attachment`        | Forwarded Waterloo mail and its attachments; see [Outlook limits](outlook.md)                                   |
 | Download             | `download_file`                                                                                                                   | Saves a course file after owner approval                                                                        |
 
 ## Optional Racket tools
@@ -44,7 +45,7 @@ All four are available only when this user's runner is configured. Execution use
 - The speech model downloads on first use. Media stays on the VM; no transcription provider receives it. The generated text can misread math and technical terms.
 - Transcripts and downloaded course files are stored as ordinary private files. Authentication state is encrypted separately. Manage retention yourself.
 - Reading a resource can cause the school’s ordinary view/access tracking. Read tools do not post replies, change grades, submit work, or send messages. Crowdmark writes require separate approval.
-- Outlook, Teams, Quest, external publisher tools, and arbitrary websites are not included.
+- Outlook mail is available only from forwarding: new arrivals, without folders, read state, or sent mail. Teams, Quest, external publisher tools, and arbitrary websites are not included.
 
 ## Approval rules
 

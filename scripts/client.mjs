@@ -16,13 +16,19 @@ import path from "node:path";
 import { readConfig, root } from "../src/config.mjs";
 
 const exec = promisify(execFile);
-const [command, name, signingKey] = process.argv.slice(2);
+const argv = process.argv.slice(2);
+const flags = argv.filter((a) => a.startsWith("--"));
+const [command, name, signingKey] = argv.filter((a) => !a.startsWith("--"));
+// mail-ingest tokens can only deliver forwarded mail to /ingest/mail; see docs/outlook.md.
+const role = flags.includes("--mail-ingest") ? "mail-ingest" : "mcp";
 if (
   !["issue", "revoke", "list"].includes(command) ||
-  (command !== "list" && !/^[a-z0-9-]{1,40}$/.test(name ?? ""))
+  (command !== "list" && !/^[a-z0-9-]{1,40}$/.test(name ?? "")) ||
+  flags.some((f) => f !== "--mail-ingest") ||
+  (flags.length && command !== "issue")
 ) {
   console.log(
-    "Usage: npm run client -- issue NAME [legacy-exe-SSH-key]\n       npm run client -- revoke NAME\n       npm run client -- list",
+    "Usage: npm run client -- issue NAME [legacy-exe-SSH-key] [--mail-ingest]\n       npm run client -- revoke NAME\n       npm run client -- list",
   );
   process.exit(2);
 }
@@ -39,8 +45,9 @@ try {
   if (command === "list") {
     console.log(
       JSON.stringify(
-        clients.map(({ name, enabled, expiresAt }) => ({
+        clients.map(({ name, role, enabled, expiresAt }) => ({
           name,
+          role: role ?? "mcp",
           enabled,
           expiresAt,
         })),
@@ -78,7 +85,7 @@ try {
         JSON.stringify({
           exp: Math.floor(expiresAt / 1000),
           cmds: [],
-          ctx: { role: "mcp", id },
+          ctx: { role, id },
         }),
       );
       // ssh-keygen signs a file, so no secret is interpolated into a shell command.
@@ -109,6 +116,7 @@ try {
     clients.push({
       name,
       id,
+      ...(role === "mcp" ? {} : { role }),
       enabled: true,
       expiresAt,
       ...(config.authMode === "portable"

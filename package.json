@@ -36,6 +36,8 @@
     "ajv": "^8.18.0",
     "dotenv": "^17.2.4",
     "file-type": "^21.3.0",
+    "mailauth": "^7.1.1",
+    "mailparser": "^3.9.37",
     "playwright": "^1.58.2",
     "sanitize-filename": "^1.6.3",
     "trash": "^10.1.1",

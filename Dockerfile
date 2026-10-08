@@ -38,7 +38,7 @@ COPY --from=build /app/upstream/build ./upstream/build
 COPY web ./web
 COPY src ./src
 COPY scripts ./scripts
-COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs renew.mjs transcribe.py ./
+COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs outlook.mjs renew.mjs transcribe.py ./
 # A 4 MiB young generation keeps the long-lived worker near 195 MiB instead of 290 MiB
 # after sustained reads, at about 3% more GC CPU and no measurable latency change.
 ENV NODE_OPTIONS=--max-semi-space-size=4
