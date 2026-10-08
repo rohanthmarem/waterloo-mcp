@@ -1,6 +1,16 @@
 # Authentication and unattended renewal
 
-## Default: saved session
+## Choose the login command for your hosting mode
+
+Portable hosting separates service access from school login. The owner key signs you into the MCP owner pages; your Waterloo password and Duo sign you into Waterloo. Agent tokens grant MCP access only and cannot import a school session.
+
+- On a browser-capable Docker host: install Chromium, start the service, then run `npm run host -- login alice`.
+- For a headless host: use the [remote-login command](hosting.md#sign-in-from-a-different-computer) on your own browser-capable computer. Repeat it when `AUTH_REAUTH_REQUIRED` occurs.
+- For legacy exe.dev: use `npm run login` and the deployment steps below.
+
+Portable login verifies the configured Waterloo account before saving, then encrypts the session with that profile's key. It does not copy an authenticator or grant one user's agents access to another profile. Racket does not require a Waterloo login to run saved code; fetching a school assignment still does.
+
+## Default: saved session (legacy exe.dev)
 
 `npm run login` opens a normal local Chromium browser. You enter your own password and complete Duo. The command verifies the Waterloo account through LEARN, then saves encrypted browser and API session data. It does not save your password or clone a personal passkey.
 
@@ -14,6 +24,8 @@ npm run deploy -- YOUR-VM.exe.xyz session
 A browser passkey is not a permanent API credential. Cookies can expire or be revoked. No configuration here can guarantee that Waterloo will never ask the account owner to sign in again.
 
 ## Optional experiment: a dedicated software authenticator
+
+The enrollment and deployment commands below describe legacy exe.dev setup. Portable setup does not provision this factor automatically.
 
 This mode was developed with one account in the predecessor deployment. It depends on Waterloo allowing registration and later use of a separate security key. It is not guaranteed for other accounts or future policy changes. Normal setup does not enable it.
 

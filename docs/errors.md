@@ -7,8 +7,8 @@ Gateway errors include `code`, a safe `message`, an `action`, `retryable`, and a
 | `HOST_REJECTED`           | 400             | No          | Request Host does not match this user’s configured origin. Preserve Host at the HTTPS proxy.                                                                                                                                          |
 | `LOGIN_RATE_LIMITED`      | 429             | Yes         | Wait one minute after repeated incorrect owner keys.                                                                                                                                                                                  |
 | `SESSION_IMPORT_REJECTED` | 400             | No          | The login could not be verified for the configured Waterloo account. Sign in to that account and retry.                                                                                                                               |
-| `CONFIG_INVALID`          | 500             | No          | Service configuration is incomplete. Run npm run setup, then npm run doctor.                                                                                                                                                          |
-| `AUTH_REQUIRED`           | 401             | No          | Sign in to access this service. Open the service in your browser or supply an exe.dev client token.                                                                                                                                   |
+| `CONFIG_INVALID`          | 500             | No          | Service configuration is incomplete. Use host doctor USER for portable hosting, or setup and doctor for legacy exe.dev.                                                                                                               |
+| `AUTH_REQUIRED`           | 401             | No          | Sign in to access this service. Use the owner login or a valid agent token for the configured portable or legacy exe.dev mode.                                                                                                        |
 | `CLIENT_REVOKED`          | 403             | No          | This client is not allowed. Ask the owner to issue a new client token.                                                                                                                                                                |
 | `ORIGIN_REJECTED`         | 403             | No          | The request origin is not allowed. Use the configured HTTPS service URL.                                                                                                                                                              |
 | `INPUT_INVALID`           | 400             | No          | The request arguments are invalid. Check the tool input schema.                                                                                                                                                                       |
@@ -61,3 +61,24 @@ Command-line diagnostics also use these codes:
 `doctor` prints named checks with `ok`, `needs_action`, or `info` and exits nonzero when a required local check fails. It does not make network requests.
 
 Portable host commands also report `HOST_SINGLE_USER_LIMIT`, `HOST_LOCAL_PORT_MISMATCH`, `HOST_SHARED_COOKIE_HOST`, `HOST_DUPLICATE_USER_CONFIG`, `HOST_ADMIN_BUSY`, `HOST_ISOLATION_FAILED`, `HOST_USER_NOT_FOUND`, and `HOST_SETUP_FAILED`. Check the reported audit findings before starting. Do not delete a lock unless its owning command has stopped. A partial setup is preserved for inspection; the CLI never overwrites an existing profile. Owner-key rotation failures report `OWNER_ROTATION_FAILED`.
+
+## Racket errors
+
+These errors use the same MCP error format. Do not change user data or run code outside the isolated runner to bypass an error.
+
+| Code                         | HTTP equivalent | Retry later | Recovery                                                                                             |
+| ---------------------------- | --------------- | ----------- | ---------------------------------------------------------------------------------------------------- |
+| `RACKET_DISABLED`            | 404             | No          | Enable Racket for this profile, render/start, and refresh the tool catalog.                          |
+| `RACKET_NOT_FOUND`           | 404             | No          | List workspaces or create a new ID with revision zero.                                               |
+| `RACKET_STATE_INVALID`       | 500             | No          | Preserve the unreadable file; restore it with the matching user key.                                 |
+| `RACKET_STORAGE_UNAVAILABLE` | 503             | No          | Check this profile's disk space and directory permissions.                                           |
+| `RACKET_REVISION_CONFLICT`   | 409             | No          | Read the latest document, combine edits, and request new approval.                                   |
+| `RACKET_BUSY`                | 409             | Yes         | Wait for the active operation; have the administrator inspect stale locks after a crash.             |
+| `RACKET_UNAVAILABLE`         | 503             | Yes         | Inspect the user's runner and internal network. Read saved results before retrying an uncertain run. |
+| `RACKET_WORKSPACE_LIMIT`     | 400             | No          | The user has 50 workspaces. Preserve needed code before reusing one.                                 |
+
+Run results use `lastRun.status`, `lastRun.code`, `lastRun.stdout`, and `lastRun.stderr`. A program error can be a saved result rather than an MCP transport error. Codes include `RACKET_PROGRAM_ERROR`, `RACKET_TIME_LIMIT`, `RACKET_MEMORY_LIMIT`, and `RACKET_OUTPUT_LIMIT`. Fix the program or reduce its workload; a new run still requires approval. `completed` means the process finished, not that its tests passed.
+
+A failed Racket lock, revision, or runner-health check does not consume approval. After execution is sent, an uncertain failure can consume it. Keep arguments unchanged for a still-valid approval; never blindly repeat execution after a lost response.
+
+`HOST_INTERRUPTED` means the admin command received a shutdown signal. Inspect service status after its subprocess exits before retrying. `HOST_ADMIN_BUSY` protects an active command; do not remove its lock to start another command concurrently.

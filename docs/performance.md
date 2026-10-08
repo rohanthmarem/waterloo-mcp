@@ -274,7 +274,7 @@ Local image builds were not possible on the measuring machine (no running Docker
 | `upstream/` copied | sources, tests, config, build output                        | `package.json` and `build/` only |
 | build context      | included `docs/`, `bench/`, `upstream/tests/`               | excluded                         |
 
-The runtime stage no longer contains a compiler, test runner, or the TypeScript sources. Verify on the VM after the next `npm run deploy -- HOST code` with `sudo docker image ls waterloo-mcp-mcp`. The base image, apt packages (poppler, ffmpeg, python venv), and the transcription wheels are unchanged; they remain most of the image.
+The runtime stage no longer contains a compiler, test runner, or the TypeScript sources. Verify on the VM after the next `npm run deploy -- HOST code` with `sudo docker image ls waterloo-mcp-mcp`. The base image, apt packages (poppler, ffmpeg, python venv), and the transcription wheels are unchanged; they remain most of the image. The [VM resource pass](#vm-resource-pass-october-2026) later replaced the runtime base.
 
 ## What changed
 
@@ -298,4 +298,48 @@ The runtime stage no longer contains a compiler, test runner, or the TypeScript 
 
 - A worker that exits (out of memory, crash) is not restarted: the gateway keeps its dead client and every tool answers `UPSTREAM_UNAVAILABLE` until the container restarts, while the health check stays green because `/status` does not touch the worker. Reconnecting on transport close would fix this; it is a behavior change and was not made here.
 - The D2L content table-of-contents endpoint returns a whole course tree in one request instead of one per module. Its field set differs from the per-module endpoint, so switching needs verification against a live course.
-- A slimmer base image (Node plus only Chromium) would remove roughly a gigabyte, at the cost of leaving the pinned Playwright image and its tested user and library layout.
+- A slimmer base image (Node plus only Chromium) would remove roughly a gigabyte, at the cost of leaving the pinned Playwright image and its tested user and library layout. Done in the VM resource pass below.
+
+## VM resource pass (October 2026)
+
+Measured on 2026-10-08 on the production exe.dev VM (2 vCPU, 8 GiB, Ubuntu 24.04, Docker 29 with the containerd image store), comparing the deployed image (`a817dac`) with this change. Benchmarks ran in throwaway containers with `--network none` and the offline suite mounted, so nothing contacted Waterloo and the running service was not touched. `BENCH_LATENCY_MS=80`.
+
+What the VM showed before the change, after 7 days of uptime: the container held about 300 MiB of process memory (gateway 150 MiB RSS, worker 216 MiB), 90 defunct `chrome-headless` processes under `node gateway.mjs`, a 4.13 GB image of which 1.2 GB was browsers, and seven tagged image versions plus 2.9 GB of build cache on a 25 GB disk that was 72% full.
+
+| metric                                             | before        | after          | change |
+| -------------------------------------------------- | ------------- | -------------- | ------ |
+| runtime image                                      | 4.13 GB       | 2.14 GB        | -48%   |
+| `/ms-playwright` in the image                      | 1.2 GB        | 266 MB         | -78%   |
+| gateway import (median of 5)                       | 458 ms        | 220 ms         | -52%   |
+| gateway idle, fresh container (cgroup anon memory) | 92 MiB        | 51 MiB         | -44%   |
+| worker RSS after every tool (warm pass)            | 194 MiB       | 138 MiB        | -29%   |
+| worker RSS after 60 rounds of composite reads¹     | 282–292 MiB   | 182–207 MiB    | -33%   |
+| worker CPU for those 60 rounds¹                    | 2.63–2.75 s   | 2.80–2.82 s    | +3%    |
+| worker startup to tools/list                       | 426 ms        | 383 ms         | -10%   |
+| health check, per run every 30 s                   | ~55 ms (Node) | ~2.5 ms (bash) | -95%   |
+| defunct Chromium processes after a week            | 90            | 0              |        |
+
+¹ `bench/memory-soak.mjs`-style loop, three runs each. Tool latency was unchanged: every cold and warm tool, the outline composite, concurrent reads, and the browser lifecycle rows stayed within run-to-run noise (`npm run bench:compare -- vm-baseline vm-final`). Golden output matched on both images except `get_upcoming_due_dates`, which returns an empty list on both because the fixture due dates are now in the past.
+
+What changed:
+
+- **Playwright loads on first use again.** The Crowdmark session imported `playwright` at the top of the module, which put about 40 MiB of memory and 240 ms into every gateway start even when Crowdmark is never used. A test now fails if importing `gateway.mjs` loads Playwright.
+- **Runtime image on plain Ubuntu 24.04.** The build stage stays on the pinned Playwright image; the runtime copies only its Node binary and the Chromium headless shell. Every launch in the service is headless, which Playwright serves from the headless shell, so the full Chromium, Firefox, WebKit, their system libraries, Xvfb, and npm are gone. The Chromium libraries and fonts follow Playwright's own Ubuntu 24.04 list. The user stays `pwuser` with UID/GID 1001, so existing state keeps its ownership. The font cache is built into the image; the read-only container could not write one.
+- **`NODE_OPTIONS=--max-semi-space-size=4`.** A smaller young generation stops V8 from growing the long-lived worker toward 290 MiB under sustained reads. `--optimize-for-size` saved more (about 105 MiB) but made CPU-bound work such as Piazza thread rendering 67% slower, and a hard old-space cap is unsafe while an exited worker is not restarted. `MALLOC_ARENA_MAX=2` made no measurable difference.
+- **`init: true` in `compose.yaml`.** Chromium helpers that outlive their parent were reparented to `node gateway.mjs`, which never reaps them. The shared-hosting compose file already had it.
+- **Health check without Node.** A bash `/dev/tcp` request replaces starting Node every 30 seconds.
+
+The same browser and gateway tests that pass on the old image pass inside the new one with real Chromium (52 of 55; the three host-tooling tests need Docker and `ssh-keygen` on the host in both images). A synthesized speech clip went through the same `ffprobe`, `ffmpeg` and faster-whisper steps as `transcribe_course_media` and produced identical transcripts on both images.
+
+Disk on the VM: the new image shares no layers with the old ones, so the first deploy adds about 2.1 GB until older tags are removed. `scripts/disk-maintenance.sh` deliberately keeps tagged rollback images. Build-stage bases are kept only in the build cache, which that script already trims.
+
+Left for a separate decision:
+
+- **ffmpeg** accounts for 200 MB of the image's apt layer. The transcription venv already ships PyAV, which could do the probe and window extraction, but that rewrites the transcription path.
+- **`libllvm20` and Mesa** (180 MB) are pulled in by `libgbm1`, which the headless shell links against.
+
+## Shared hosting and optional Racket
+
+The measurements above describe the school-data worker. Each hosted user has a separate worker, cache, and browser process; memory and concurrent work therefore increase with active users. They do not share cached school responses.
+
+Racket runs use a separate per-user container with one active run at a time. Its time, memory, and output limits are documented in [Racket](racket.md#execution-and-data-protection). The LEARN benchmark does not measure Racket execution, image-build time, browser editing latency, or shared-host capacity. Do not use its numbers as sizing evidence for those workloads.

@@ -1,6 +1,200 @@
 import { randomUUID } from "node:crypto";
 
 export const ERRORS = {
+  CROWDMARK_AUTH_REQUIRED: [
+    401,
+    "Crowdmark needs a valid Waterloo login.",
+    "Renew your encrypted Waterloo session on this host, then retry.",
+    false,
+  ],
+  CROWDMARK_IDENTITY_MISMATCH: [
+    403,
+    "Crowdmark signed in to a different or unknown identity.",
+    "Check the configured Waterloo account. No assignment was changed.",
+    false,
+  ],
+  CROWDMARK_RESPONSE_CHANGED: [
+    502,
+    "Crowdmark returned an unexpected response or changed its page layout.",
+    "Open Crowdmark directly and report the changed page. No empty result was inferred.",
+    false,
+  ],
+  CROWDMARK_NOT_FOUND: [
+    404,
+    "This Crowdmark assignment was not found.",
+    "List your assignments and use a returned assessmentId.",
+    false,
+  ],
+  CROWDMARK_WRITE_BLOCKED: [
+    409,
+    "This assignment cannot be edited through the MCP.",
+    "Use an open, untimed, individual assignment that is not submitted or graded. Late work, timed tests, group work and resubmissions require the Crowdmark website.",
+    false,
+  ],
+  CROWDMARK_CHANGED: [
+    409,
+    "The assignment changed since you reviewed it.",
+    "Read the current assignment and request a new approval using its new revision. No further changes were made.",
+    false,
+  ],
+  CROWDMARK_OUTCOME_UNKNOWN: [
+    409,
+    "The action may have saved some or all changes, but completion could not be verified.",
+    "Do not retry automatically. Read the assignment or open Crowdmark, reconcile the saved answers, and request approval only for missing work.",
+    false,
+  ],
+  CROWDMARK_ACTION_USED: [
+    409,
+    "This action ID has already been attempted.",
+    "Read the assignment before requesting a different action. The previous request was not repeated.",
+    false,
+  ],
+  CROWDMARK_SOLO_CONFIRMATION_REQUIRED: [
+    409,
+    "The instructor enabled groups for this assignment.",
+    "To submit alone, set confirmSoloGroup to true and review the separate owner approval. Actual multi-person groups are not supported.",
+    false,
+  ],
+  CROWDMARK_INCOMPLETE: [
+    409,
+    "At least one question has no saved answer.",
+    "Read the assignment and save the missing answers before requesting submission.",
+    false,
+  ],
+  CROWDMARK_FILE_INVALID: [
+    400,
+    "The photo or transfer ticket is missing, expired, used, or does not match this client and the approved bytes.",
+    "Use a new approved ticket with the exact filename, MIME type, size and SHA-256. Only JPEG and PNG are supported.",
+    false,
+  ],
+  CROWDMARK_STORAGE_FULL: [
+    507,
+    "Crowdmark staging or operation storage reached its limit.",
+    "Wait for staged photos to expire, or ask the host owner to review storage. Do not delete submitted work.",
+    false,
+  ],
+  CROWDMARK_STORAGE_UNAVAILABLE: [
+    503,
+    "Encrypted Crowdmark storage could not be accessed.",
+    "Check this user’s state directory, encryption key and free disk space.",
+    false,
+  ],
+  CROWDMARK_UNAVAILABLE: [
+    503,
+    "Crowdmark could not be reached or read.",
+    "Check connectivity and the browser runtime, then retry a read. Do not blindly retry an upload or submission.",
+    false,
+  ],
+
+  BATCH_READ_ONLY: [
+    400,
+    "The batch contains an unsupported or write-capable request.",
+    "Use only listed read-only tools; request downloads and writes separately through owner approval.",
+    false,
+  ],
+  BATCH_RESULT_TOO_LARGE: [
+    413,
+    "This result exceeds the batch size limit.",
+    "Call this tool individually with a smaller page size if available.",
+    false,
+  ],
+  MARMOSET_AUTH_REQUIRED: [
+    401,
+    "Marmoset sign-in needs renewal.",
+    "Renew the owner\u2019s Waterloo session on its existing host; retry after the authentication cooldown.",
+    false,
+  ],
+  MARMOSET_IDENTITY_MISMATCH: [
+    403,
+    "Your own Marmoset student identity was not found unambiguously.",
+    "Check enrollment and the configured Waterloo username. No alternate identity was selected.",
+    false,
+  ],
+  MARMOSET_NO_COURSES: [
+    404,
+    "No current Marmoset courses were found.",
+    "Check your course enrollment in Marmoset. Archived terms are not supported.",
+    false,
+  ],
+  MARMOSET_NOT_FOUND: [
+    404,
+    "The requested course, project or submission is not listed for this user.",
+    "List courses and projects first, then use the IDs returned by those pages.",
+    false,
+  ],
+  MARMOSET_RESPONSE_CHANGED: [
+    502,
+    "Marmoset returned an unexpected page.",
+    "Open Marmoset directly and report the changed page layout. No empty result was inferred.",
+    false,
+  ],
+  MARMOSET_RESPONSE_TOO_LARGE: [
+    502,
+    "The Marmoset page exceeds the safe size limit.",
+    "Read the page directly in Marmoset.",
+    false,
+  ],
+  MARMOSET_ACCESS_DENIED: [
+    403,
+    "Marmoset denied access.",
+    "Check the student enrollment and permissions.",
+    false,
+  ],
+  MARMOSET_UNAVAILABLE: [
+    503,
+    "Marmoset could not be reached or read.",
+    "Retry later; check Marmoset availability and the browser runtime.",
+    true,
+  ],
+
+  RACKET_STORAGE_UNAVAILABLE: [
+    503,
+    "Workspace storage could not be read or written.",
+    "Check disk space and permissions for this user’s private Racket directory. Preserve existing files.",
+    false,
+  ],
+  RACKET_DISABLED: [
+    404,
+    "The Racket workspace is not enabled.",
+    "Add --racket for this user during host setup, or enable racket in the host manifest and render/start again.",
+    false,
+  ],
+  RACKET_NOT_FOUND: [
+    404,
+    "The workspace does not exist.",
+    "List workspaces, or create it with expectedRevision 0.",
+    false,
+  ],
+  RACKET_STATE_INVALID: [
+    500,
+    "The encrypted workspace could not be read.",
+    "Restore this user’s workspace and matching encryption key. Do not overwrite unreadable state.",
+    false,
+  ],
+  RACKET_REVISION_CONFLICT: [
+    409,
+    "The saved code changed since you read it.",
+    "Read the latest revision and combine the edits. Request a new approval for changed arguments.",
+    false,
+  ],
+  RACKET_BUSY: [
+    409,
+    "This workspace or runner is busy.",
+    "Wait for the current operation. If a lock remains after a crash, have the host administrator check it before removing it.",
+    true,
+  ],
+  RACKET_UNAVAILABLE: [
+    503,
+    "The isolated Racket runner could not be reached.",
+    "Check the per-user runner container. Code is never executed inside the MCP server as a fallback.",
+    true,
+  ],
+  RACKET_WORKSPACE_LIMIT: [
+    400,
+    "This user has reached the 50-workspace limit.",
+    "Reuse an existing workspace after preserving any code you need.",
+    false,
+  ],
   HOST_REJECTED: [
     400,
     "The request hostname does not match this instance.",
@@ -47,6 +241,24 @@ export const ERRORS = {
     502,
     "The Piazza response was not recognized.",
     "Report this code and the operation. Do not repeatedly sign in or guess alternate API methods.",
+    false,
+  ],
+  MAIL_NOT_FOUND: [
+    404,
+    "The forwarded message or attachment was not found.",
+    "Use a messageId from list_outlook_messages or search_outlook_messages, and an attachment index from get_outlook_message. Old messages are removed when storage limits are reached.",
+    false,
+  ],
+  MAIL_MESSAGE_INVALID: [
+    400,
+    "The delivered message could not be read as email.",
+    "Send the unchanged raw message as message/rfc822.",
+    false,
+  ],
+  MAIL_STATE_INVALID: [
+    500,
+    "The encrypted Outlook mail store could not be read.",
+    "Restore the matching state and session key. Do not delete the store while forwarding is active.",
     false,
   ],
   ROOM_NOT_FOUND: [
@@ -142,7 +354,7 @@ export const ERRORS = {
   REQUEST_TOO_LARGE: [
     413,
     "The request is too large.",
-    "Send a smaller request: 64 KiB for normal requests, or 1 MiB for a browser-session import.",
+    "Send a smaller request: 64 KiB for normal requests, 1 MiB for a browser-session import, or 25 MiB for a forwarded email.",
     false,
   ],
   TOOL_UNSUPPORTED: [

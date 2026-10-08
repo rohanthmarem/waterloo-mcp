@@ -1,6 +1,6 @@
 # Tools and read coverage
 
-The gateway uses an explicit allowlist. New upstream tools are blocked until reviewed and added to `authorization.mjs`. Use `tools/list` to get each tool’s current input schema.
+The gateway uses an explicit allowlist. New upstream tools are blocked until reviewed and added to `authorization.mjs`. Use `tools/list` to get each tool’s current input schema. There are 47 core tools. Enabling Racket for a user adds four tools, for a total of 51.
 
 | Area                 | Tools                                                                                                                             | What they read                                                                                                  |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -19,7 +19,19 @@ The gateway uses an explicit allowlist. New upstream tools are blocked until rev
 | Odyssey              | `get_odyssey_schedule`                                                                                                            | Assessment schedule visible in the student portal                                                               |
 | Study rooms          | `list_study_rooms`, `get_study_room_availability`, `book_study_room`, `get_study_room_bookings`, `cancel_study_room_booking`      | Room discovery, availability, approved booking/cancellation, and this MCP’s booking records                     |
 | Piazza               | `check_piazza_auth`, `list_piazza_classes`, `get_piazza_course_info`, `get_piazza_feed`, `search_piazza_posts`, `get_piazza_post` | Class lists, published information, feeds, search, and full current discussions; see [Piazza limits](piazza.md) |
+| Outlook mail         | `check_outlook_mail`, `list_outlook_messages`, `search_outlook_messages`, `get_outlook_message`, `read_outlook_attachment`        | Forwarded Waterloo mail and its attachments; see [Outlook limits](outlook.md)                                   |
 | Download             | `download_file`                                                                                                                   | Saves a course file after owner approval                                                                        |
+
+## Optional Racket tools
+
+| Tool                     | What it does                                                 | Owner approval |
+| ------------------------ | ------------------------------------------------------------ | -------------- |
+| `list_racket_workspaces` | Lists saved workspaces, revisions, and unreadable IDs        | No             |
+| `read_racket_workspace`  | Reads assignment text, code, revision, and latest result     | No             |
+| `save_racket_workspace`  | Creates or replaces one document using its expected revision | Yes            |
+| `run_racket_workspace`   | Executes that saved revision and stores bounded results      | Yes            |
+
+All four are available only when this user's runner is configured. Execution uses a separate container without school credentials. See [Racket](racket.md) for schemas, supported languages, and limits. A successful run does not establish that the program passed its tests.
 
 ## Limits that matter
 
@@ -32,13 +44,40 @@ The gateway uses an explicit allowlist. New upstream tools are blocked until rev
 - Transcription streams a file to temporary storage, with a 512 MiB limit and a two-minute download timeout. Each request covers 10–600 seconds. One job runs at a time; repeat the same arguments to check progress. Failed jobs can be retried after one minute.
 - The speech model downloads on first use. Media stays on the VM; no transcription provider receives it. The generated text can misread math and technical terms.
 - Transcripts and downloaded course files are stored as ordinary private files. Authentication state is encrypted separately. Manage retention yourself.
-- Reading a resource can cause the school’s ordinary view/access tracking. The server does not intentionally post replies, change grades, submit work, or send messages.
-- Outlook, Teams, Quest, external publisher tools, and arbitrary websites are not included.
+- Reading a resource can cause the school’s ordinary view/access tracking. Read tools do not post replies, change grades, submit work, or send messages. Crowdmark writes require separate approval.
+- Outlook mail is available only from forwarding: new arrivals, without folders, read state, or sent mail. Teams, Quest, external publisher tools, and arbitrary websites are not included.
 
 ## Approval rules
 
-`book_study_room`, `cancel_study_room_booking`, and `download_file` always need approval. Room approval includes the resolved room name, library, date, start and end times, and terms notice. `get_syllabus` needs approval only when `downloadPath` is present. Downloads must stay under `/state/downloads`.
+`book_study_room`, `cancel_study_room_booking`, `download_file`, `save_racket_workspace`, `run_racket_workspace`, `create_crowdmark_upload`, `save_crowdmark_answers`, and `submit_crowdmark_assignment` always need owner approval. Room approval includes the resolved room name, library, date, start and end times, and terms notice. `get_syllabus` needs approval only when `downloadPath` is present. Downloads must stay under `/state/downloads`.
 
-Read operations can create temporary files, caches, transcripts, and updated login state as part of their operation. These internal files do not prompt for approval. Explicit saved downloads do. Study-room booking and cancellation are the only enabled external write actions. No course editing, assignment submission, or general messaging tool is enabled.
+Read operations can create temporary files, caches, transcripts, and updated login state as part of their operation. These internal files do not prompt for approval. Explicit saved downloads do. Study-room booking/cancellation and the explicitly approved Crowdmark answer/submission tools are enabled external writes. No general course editing or messaging tool is enabled.
 
-Approvals match the tool, all arguments, and the requesting client. A changed argument, different agent, denied request, expired approval, or second use is rejected. An approval is consumed before the write begins; if the write fails, request a new approval rather than repeating the old ID.
+Approvals match the tool, all arguments, and the requesting client. A changed argument, different agent, denied request, expired approval, or second use is rejected. An approval is consumed before the write begins. Racket checks its lock, revision, and runner health before consumption; an unchanged request can reuse a still-valid approval after those checks fail. Once a write or run starts, do not assume its approval is reusable. Inspect saved state after an uncertain result before requesting another approval.
+
+## Marmoset
+
+- `check_marmoset_auth`: check the current student's login.
+- `list_marmoset_courses`: discover current course IDs.
+- `list_marmoset_projects`: read projects, due dates, extensions and handout links.
+- `get_marmoset_project`: read submission history and published scores.
+- `get_marmoset_submission`: read existing detailed results and token availability.
+
+All five are read-only. See [Marmoset](marmoset.md) for arguments, pagination,
+limitations and errors. No submissions or release tests can be triggered.
+
+## Read multiple resources
+
+`read_many` runs up to eight independent reads in one MCP request, with three at
+a time. Writes and downloads are rejected before any action starts. See
+[fast reads](fast-reads.md) for examples, limits and measurements.
+
+`read_course_file` reads authenticated files linked inside LEARN course pages
+without saving them. [Linked-file guidance](learn-linked-files.md) explains why
+an agent should use this instead of opening a bare browser link.
+
+## Crowdmark
+
+Three read tools discover assignments and read questions/saved work. Three approved
+write tools stage exact photos, save question answers and submit separately. See
+[Crowdmark setup, photo transfer, limits and verification](crowdmark.md).

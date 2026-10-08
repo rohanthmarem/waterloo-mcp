@@ -25,14 +25,19 @@
     "bench:live": "node bench/live.mjs",
     "host": "node scripts/host.mjs",
     "owner": "node scripts/owner.mjs",
-    "test:hosting:containers": "node tests/host-containers.mjs"
+    "test:hosting:containers": "node tests/host-containers.mjs",
+    "test:racket:runner": "node tests/racket-runner.mjs",
+    "test:crowdmark:browser": "WATERLOO_TEST_BROWSER=1 node --test tests/crowdmark-browser.test.mjs"
   },
   "dependencies": {
+    "@mixmark-io/domino": "2.2.0",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@napi-rs/keyring": "^2.0.0",
     "ajv": "^8.18.0",
     "dotenv": "^17.2.4",
     "file-type": "^21.3.0",
+    "mailauth": "^7.1.1",
+    "mailparser": "^3.9.37",
     "playwright": "^1.58.2",
     "sanitize-filename": "^1.6.3",
     "trash": "^10.1.1",

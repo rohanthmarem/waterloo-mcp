@@ -59,6 +59,14 @@ async function upload(files, excludes = []) {
   });
 }
 try {
+  if (mode === "init" || mode === "code") {
+    // Run before uploading code or stopping anything. Image builds temporarily
+    // need space for both the running image and its replacement.
+    await run("ssh", [
+      host,
+      `free_kb=$(df -Pk / | awk 'NR == 2 {print $4}'); case "$free_kb" in ''|*[!0-9]*) echo 'DISK_CHECK_FAILED: cannot determine free disk space' >&2; exit 1;; esac; if [ "$free_kb" -lt 8388608 ]; then echo 'DISK_SPACE_LOW: at least 8 GiB free is required before building; run host cache maintenance first' >&2; exit 1; fi`,
+    ]);
+  }
   if (mode === "init") {
     await access(path.join(root, "private/state/browser.json"));
     await run("ssh", [

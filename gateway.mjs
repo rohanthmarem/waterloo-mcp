@@ -1,4 +1,20 @@
+import {
+  Crowdmark,
+  crowdmarkTools,
+  crowdmarkSchemas,
+} from "./src/crowdmark.mjs";
+import { CrowdmarkError } from "./src/crowdmark-files.mjs";
+import { batchReadTool, batchReads } from "./src/batch-reads.mjs";
+import { Odyssey } from "./src/odyssey.mjs";
+import { Marmoset, marmosetTools, marmosetSchemas } from "./src/marmoset.mjs";
 import http from "node:http";
+import { ZodError } from "zod";
+import {
+  RacketWorkspace,
+  RacketError,
+  racketSchemas,
+  racketTools,
+} from "./src/racket-workspace.mjs";
 import { PortableAuth } from "./src/portable-auth.mjs";
 import { importSession } from "./src/import-session.mjs";
 import { readFile, writeFile, rename } from "node:fs/promises";
@@ -28,6 +44,8 @@ import { ReadCache } from "./src/read-cache.mjs";
 import { encrypt } from "./upstream/build/auth/encrypted-store.js";
 import { PiazzaSession, PiazzaError } from "./src/piazza-session.mjs";
 import { Piazza, piazzaTools, piazzaSchemas } from "./piazza.mjs";
+import { MailStore, MailError, MAIL_LIMITS } from "./src/mail-store.mjs";
+import { Outlook, outlookTools, outlookSchemas } from "./outlook.mjs";
 
 const expensive = new Set([
   "get_course_home",
@@ -49,7 +67,7 @@ function reply(res, status, data, type = "application/json") {
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
     "Content-Security-Policy":
-      "default-src 'none'; form-action 'self'; frame-ancestors 'none'",
+      "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",
   });
   res.end(typeof data === "string" ? data : JSON.stringify(data));
 }
@@ -57,7 +75,9 @@ function httpError(res, code) {
   const p = problem(code);
   reply(res, p.httpStatus, p);
 }
-async function body(req, limit = 65536) {
+async function bodyBuffer(req, limit) {
+  if (Number(req.headers["content-length"]) > limit)
+    throw new Error("REQUEST_TOO_LARGE");
   let size = 0;
   const chunks = [];
   for await (const chunk of req) {
@@ -65,8 +85,17 @@ async function body(req, limit = 65536) {
     if (size > limit) throw new Error("REQUEST_TOO_LARGE");
     chunks.push(chunk);
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }
+const body = async (req, limit = 65536) =>
+  (await bodyBuffer(req, limit)).toString("utf8");
+// Agent tokens reach MCP and Crowdmark uploads; a mail-ingest token can only deliver mail.
+const clientAllowed = (role, req) =>
+  role === "mcp"
+    ? ["/mcp", "/status"].includes(req.url) ||
+      (req.method === "PUT" &&
+        /^\/crowdmark\/uploads\/[a-f0-9]{48}$/.test(req.url))
+    : role === "mail-ingest" && req.url === "/ingest/mail";
 
 export function createGateway(
   config,
@@ -74,17 +103,27 @@ export function createGateway(
   {
     libcal = new LibCal(config),
     piazzaSession = new PiazzaSession(config),
+    marmoset = new Marmoset(config),
+    odyssey = new Odyssey(config),
+    crowdmark = new Crowdmark(config),
+    mailStore = new MailStore(config),
   } = {},
 ) {
+  const racket = new RacketWorkspace(config);
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
   const piazza = new Piazza(piazzaSession);
+  const outlook = new Outlook(mailStore);
+  let ingesting = 0;
   const portable =
     config.authMode === "portable" ? new PortableAuth(config) : null;
   let upstream;
+  let catalog;
+  let activeBatches = 0;
   async function client() {
     upstream ??= createClient().catch(() => {
       upstream = undefined;
+      catalog = undefined;
       throw new Error("UPSTREAM_UNAVAILABLE");
     });
     return upstream;
@@ -94,6 +133,7 @@ export function createGateway(
       if (req.url === "/health" && req.method === "GET")
         return reply(res, 200, { status: "running" });
       let caller = "owner-browser";
+      let role = "owner";
       if (portable) {
         if (!portable.validHost(req)) return httpError(res, "HOST_REJECTED");
         if (req.headers.origin && req.headers.origin !== config.origin)
@@ -101,7 +141,7 @@ export function createGateway(
         const loginUrl = new URL(req.url, config.origin);
         const requestedNext = loginUrl.searchParams.get("next");
         const ownerPath = (value) =>
-          /^\/(?:connection|setup(?:\/piazza)?|approvals\/[a-f0-9]{32,128})$/.test(
+          /^\/(?:racket|connection|setup(?:\/piazza|\/outlook)?|approvals\/[a-f0-9]{32,128})$/.test(
             value ?? "",
           );
         const next = ownerPath(requestedNext) ? requestedNext : "/connection";
@@ -157,9 +197,10 @@ export function createGateway(
           }
           return httpError(res, "AUTH_REQUIRED");
         }
-        if (identity.role === "mcp" && !["/mcp", "/status"].includes(req.url))
+        if (identity.role !== "owner" && !clientAllowed(identity.role, req))
           return httpError(res, "CLIENT_REVOKED");
         caller = identity.id;
+        role = identity.role;
       } else {
         // Trust only exe.dev's private authenticated proxy. Never expose this port publicly.
         if (req.headers["x-exedev-email"]?.toLowerCase() !== config.owner)
@@ -179,19 +220,152 @@ export function createGateway(
             ),
           );
           if (
-            ctx.role !== "mcp" ||
+            !["mcp", "mail-ingest"].includes(ctx.role) ||
             !clients.some(
-              (c) => c.id === ctx.id && c.enabled && c.expiresAt > Date.now(),
+              (c) =>
+                c.id === ctx.id &&
+                (c.role ?? "mcp") === ctx.role &&
+                c.enabled &&
+                c.expiresAt > Date.now(),
             )
           )
             return httpError(res, "CLIENT_REVOKED");
-          if (!["/mcp", "/status"].includes(req.url))
+          if (!clientAllowed(ctx.role, req))
             return httpError(res, "CLIENT_REVOKED");
           caller = ctx.id;
+          role = ctx.role;
         }
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (
+        /^\/crowdmark\/uploads\/[a-f0-9]{48}$/.test(req.url) &&
+        req.method === "PUT"
+      ) {
+        if (caller === "owner-browser" && req.headers.origin !== config.origin)
+          return httpError(res, "ORIGIN_REJECTED");
+        try {
+          return reply(
+            res,
+            200,
+            await crowdmark.files.receive(
+              req.url.split("/").pop(),
+              caller,
+              req,
+            ),
+          );
+        } catch (e) {
+          return httpError(
+            res,
+            e instanceof CrowdmarkError
+              ? e.code
+              : "CROWDMARK_STORAGE_UNAVAILABLE",
+          );
+        }
+      }
+      if (
+        /^\/crowdmark\/files\/[a-f0-9]{48}$/.test(req.url) &&
+        req.method === "GET"
+      ) {
+        // Client tokens cannot reach this owner-only preview route.
+        try {
+          const file = await crowdmark.files.get(req.url.split("/").pop());
+          res.writeHead(200, {
+            "Content-Type": file.mimeType,
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'",
+          });
+          return res.end(file.bytes);
+        } catch (e) {
+          return httpError(
+            res,
+            e instanceof CrowdmarkError
+              ? e.code
+              : "CROWDMARK_STORAGE_UNAVAILABLE",
+          );
+        }
+      }
+      if (req.url.startsWith("/racket")) {
+        if (!racket.enabled()) return httpError(res, "RACKET_DISABLED");
+        const files = {
+          "/racket": ["racket.html", "text/html"],
+          "/racket/style.css": ["racket.css", "text/css"],
+          "/racket/app.js": ["racket.js", "text/javascript"],
+        };
+        if (req.method === "GET" && Object.hasOwn(files, req.url)) {
+          const [file, type] = files[req.url];
+          const content = await readFile(path.join(root, "web", file));
+          res.writeHead(200, {
+            "Content-Type": type + "; charset=utf-8",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy":
+              "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+          });
+          return res.end(content);
+        }
+        if (req.url === "/racket/api" && req.method === "POST") {
+          if (
+            req.headers.origin !== config.origin ||
+            !req.headers["content-type"]?.startsWith("application/json")
+          )
+            return httpError(res, "ORIGIN_REJECTED");
+          try {
+            const value = JSON.parse(await body(req));
+            if (
+              !value ||
+              typeof value !== "object" ||
+              typeof value.name !== "string" ||
+              !Object.hasOwn(racketSchemas, value.name)
+            )
+              return httpError(res, "INPUT_INVALID");
+            const args = racketSchemas[value.name].parse(value.args);
+            return reply(res, 200, await racket.call(value.name, args));
+          } catch (e) {
+            return httpError(
+              res,
+              e instanceof RacketError
+                ? e.code
+                : e.message === "REQUEST_TOO_LARGE"
+                  ? e.message
+                  : e instanceof ZodError || e instanceof SyntaxError
+                    ? "INPUT_INVALID"
+                    : "RACKET_STORAGE_UNAVAILABLE",
+            );
+          }
+        }
+        return httpError(res, "NOT_FOUND");
+      }
+      if (req.url === "/ingest/mail") {
+        if (role !== "mail-ingest") return httpError(res, "CLIENT_REVOKED");
+        if (
+          req.method !== "POST" ||
+          !req.headers["content-type"]?.startsWith("message/rfc822")
+        )
+          return httpError(res, "INPUT_INVALID");
+        // Each delivery can hold 25 MiB in memory; the Worker retries a busy response.
+        if (ingesting >= 2) return httpError(res, "SERVICE_BUSY");
+        ingesting++;
+        try {
+          const result = await mailStore.ingest(
+            await bodyBuffer(req, MAIL_LIMITS.maxMessageBytes),
+          );
+          // 202: received but not stored. The sender must not retry or bounce it.
+          return reply(res, result.stored ? 200 : 202, result);
+        } catch (error) {
+          return httpError(
+            res,
+            error.message === "REQUEST_TOO_LARGE"
+              ? error.message
+              : error instanceof MailError
+                ? error.code
+                : "INTERNAL_ERROR",
+          );
+        } finally {
+          ingesting--;
+        }
+      }
       if (req.url === "/account" && req.method === "GET")
         return reply(res, 200, {
           username: config.username,
@@ -209,6 +383,7 @@ export function createGateway(
           if (upstream) {
             await (await upstream).close();
             upstream = undefined;
+            catalog = undefined;
           }
           return reply(res, 200, result);
         } catch (error) {
@@ -248,6 +423,52 @@ export function createGateway(
           return httpError(
             res,
             error instanceof PiazzaError ? error.code : "UPSTREAM_UNAVAILABLE",
+          );
+        }
+      }
+      if (req.url === "/setup/outlook" && req.method === "GET") {
+        const status = await mailStore.status();
+        const deliveries = await mailStore.deliveries();
+        return reply(
+          res,
+          200,
+          `<title>Outlook forwarding</title><h1>Outlook forwarding</h1><p>${status.messageCount} forwarded messages stored. Newest arrival: ${escape(status.newestReceivedAt ?? "none yet")}.</p><h2>Recent deliveries</h2>${
+            deliveries.length
+              ? `<table><tr><th>Time</th><th>Result</th><th>Passing signers</th><th>Failing signers</th><th>Bytes</th></tr>${deliveries
+                  .map(
+                    (d) =>
+                      `<tr><td>${escape(d.at)}</td><td>${escape(d.stored ? "stored" : "rejected: " + d.reason)}</td><td>${escape(d.passingSigners.join(", ") || "none")}</td><td>${escape(d.failingSigners.join(", ") || "none")}</td><td>${escape(d.size)}</td></tr>`,
+                  )
+                  .join("")}</table>`
+              : "<p>None yet. Send yourself a test message.</p>"
+          }<h2>Trusted signers</h2><p>Every message sent to your forwarding address is stored. Optionally require a passing DKIM signature from a trusted domain. Turn this on only if the passing signers above show that all real forwarded mail, including mail from outside Waterloo, carries one.</p><form method="post"><label><input type="checkbox" name="requireTrustedSigner" value="on"${status.requireTrustedSigner ? " checked" : ""}> Reject mail without a trusted signer</label><br><label>Trusted domains <input name="trustedSigners" value="${escape(status.trustedSigners.join(", "))}" required maxlength="2000"></label><br><button>Save</button></form>`,
+          "text/html; charset=utf-8",
+        );
+      }
+      if (req.url === "/setup/outlook" && req.method === "POST") {
+        if (
+          req.headers.origin !== config.origin ||
+          !req.headers["content-type"]?.startsWith(
+            "application/x-www-form-urlencoded",
+          )
+        )
+          return httpError(res, "ORIGIN_REJECTED");
+        try {
+          const form = new URLSearchParams(await body(req));
+          const policy = await mailStore.setPolicy({
+            requireTrustedSigner: form.get("requireTrustedSigner") === "on",
+            trustedSigners: form.get("trustedSigners"),
+          });
+          return reply(
+            res,
+            200,
+            `<h1>Outlook policy saved</h1><p>${policy.requireTrustedSigner ? "Mail without a passing signature from " + escape(policy.trustedSigners.join(", ")) + " is rejected." : "All mail sent to your forwarding address is stored."}</p><p><a href="/setup/outlook">Back</a></p>`,
+            "text/html; charset=utf-8",
+          );
+        } catch (error) {
+          return httpError(
+            res,
+            error instanceof MailError ? error.code : "INPUT_INVALID",
           );
         }
       }
@@ -298,7 +519,7 @@ export function createGateway(
         return reply(
           res,
           200,
-          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
+          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p>${racket.enabled() ? '<h2>Racket</h2><p><a href="/racket">Open your assignment and code workspace</a></p>' : ""}<h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Outlook</h2><p><a href="/setup/outlook">Check forwarded Outlook mail and recent deliveries</a>. See docs/outlook.md to set up forwarding.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
           "text/html; charset=utf-8",
         );
       if (req.url === "/setup" && req.method === "POST") {
@@ -332,6 +553,7 @@ export function createGateway(
         if (upstream) {
           await (await upstream).close();
           upstream = undefined;
+          catalog = undefined;
         }
         return reply(
           res,
@@ -358,22 +580,61 @@ export function createGateway(
         { name: "waterloo-mcp", version: "0.4.0" },
         { capabilities: { tools: {} } },
       );
-      server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: [
-          ...(await (await client()).listTools()).tools,
-          outlineTool,
-          ...roomTools,
-          ...piazzaTools,
-        ]
-          .filter((t) => KNOWN_TOOLS.has(t.name))
-          .map(describeTool),
-      }));
-      server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
+      server.setRequestHandler(ListToolsRequestSchema, async () => {
+        catalog ??= (async () => ({
+          tools: [
+            ...(await (await client()).listTools()).tools,
+            outlineTool,
+            batchReadTool,
+            ...roomTools,
+            ...piazzaTools,
+            ...outlookTools,
+            ...marmosetTools,
+            ...crowdmarkTools,
+            ...(racket.enabled() ? racketTools : []),
+          ]
+            .filter((t) => KNOWN_TOOLS.has(t.name))
+            .map(describeTool),
+        }))().catch((error) => {
+          catalog = undefined;
+          throw error;
+        });
+        return catalog;
+      });
+      const executeTool = async (params) => {
         const { name } = params;
         let args = { ...params.arguments };
+        let authorizeRacket;
+        let authorizeCrowdmark;
         const authorizationId = args.authorizationId;
         delete args.authorizationId;
         if (!KNOWN_TOOLS.has(name)) return toolError("TOOL_UNSUPPORTED");
+        if (name === "read_many") {
+          if (activeBatches >= 2) return toolError("SERVICE_BUSY");
+          activeBatches++;
+          try {
+            return await batchReads(args, (childName, childArgs) =>
+              executeTool({ name: childName, arguments: childArgs }),
+            );
+          } finally {
+            activeBatches--;
+          }
+        }
+        if (Object.hasOwn(racketSchemas, name)) {
+          if (!racket.enabled()) return toolError("RACKET_DISABLED");
+          try {
+            args = racketSchemas[name].parse(args);
+          } catch {
+            return toolError("INPUT_INVALID");
+          }
+        }
+        if (Object.hasOwn(crowdmarkSchemas, name)) {
+          try {
+            args = crowdmarkSchemas[name].parse(args);
+          } catch {
+            return toolError("INPUT_INVALID");
+          }
+        }
         if (roomSchemas[name]) {
           try {
             args = parseRoomArgs(name, args);
@@ -401,6 +662,26 @@ export function createGateway(
                 );
               }
             }
+            if (Object.hasOwn(racketSchemas, name)) {
+              try {
+                summary = await racket.preview(name, args);
+              } catch (e) {
+                return toolError(
+                  e instanceof RacketError ? e.code : "INPUT_INVALID",
+                );
+              }
+            }
+            if (Object.hasOwn(crowdmarkSchemas, name)) {
+              try {
+                summary = await crowdmark.preview(name, args, caller);
+              } catch (e) {
+                return toolError(
+                  e instanceof CrowdmarkError
+                    ? e.code
+                    : "CROWDMARK_UNAVAILABLE",
+                );
+              }
+            }
             const id = await approvals.request(name, args, caller, summary);
             return toolError("APPROVAL_REQUIRED", {
               ...(summary ? { summary } : {}),
@@ -409,7 +690,28 @@ export function createGateway(
             });
           }
           try {
-            await approvals.consume(authorizationId, name, args, caller);
+            if (Object.hasOwn(racketSchemas, name))
+              authorizeRacket = async () => {
+                try {
+                  await approvals.consume(authorizationId, name, args, caller);
+                } catch {
+                  throw new RacketError("APPROVAL_INVALID");
+                }
+              };
+            else if (Object.hasOwn(crowdmarkSchemas, name))
+              authorizeCrowdmark = async (summary) => {
+                try {
+                  const approved = await approvals.read(authorizationId);
+                  if (
+                    JSON.stringify(approved.summary) !== JSON.stringify(summary)
+                  )
+                    throw new Error("changed");
+                  await approvals.consume(authorizationId, name, args, caller);
+                } catch {
+                  throw new CrowdmarkError("APPROVAL_INVALID");
+                }
+              };
+            else await approvals.consume(authorizationId, name, args, caller);
           } catch {
             return toolError("APPROVAL_INVALID");
           }
@@ -417,29 +719,59 @@ export function createGateway(
         try {
           const run = async () =>
             normalizeToolResult(
-              Object.hasOwn(piazzaSchemas, name)
-                ? await piazza.call(name, args)
-                : roomSchemas[name]
-                  ? await libcal.call(name, args)
-                  : name === "get_course_outline"
-                    ? await getCourseOutline(await client(), args)
-                    : await (
-                        await client()
-                      ).callTool({ name, arguments: args }, undefined, {
-                        timeout: 180000,
-                      }),
+              Object.hasOwn(racketSchemas, name)
+                ? {
+                    content: [
+                      {
+                        type: "text",
+                        text: JSON.stringify(
+                          await racket.call(name, args, authorizeRacket),
+                        ),
+                      },
+                    ],
+                  }
+                : Object.hasOwn(crowdmarkSchemas, name)
+                  ? await crowdmark.call(name, args, caller, authorizeCrowdmark)
+                  : name === "get_odyssey_schedule"
+                    ? await odyssey.call(args)
+                    : Object.hasOwn(marmosetSchemas, name)
+                      ? await marmoset.call(name, args)
+                      : Object.hasOwn(piazzaSchemas, name)
+                        ? await piazza.call(name, args)
+                        : Object.hasOwn(outlookSchemas, name)
+                          ? await outlook.call(name, args)
+                          : roomSchemas[name]
+                            ? await libcal.call(name, args)
+                            : name === "get_course_outline"
+                              ? await getCourseOutline(await client(), args)
+                              : await (
+                                  await client()
+                                ).callTool(
+                                  { name, arguments: args },
+                                  undefined,
+                                  {
+                                    timeout: 180000,
+                                  },
+                                ),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
             : await run();
         } catch (error) {
           return toolError(
-            error.message === "SERVICE_BUSY"
-              ? "SERVICE_BUSY"
-              : "UPSTREAM_UNAVAILABLE",
+            error instanceof RacketError
+              ? error.code
+              : Object.hasOwn(racketSchemas, name)
+                ? "RACKET_STORAGE_UNAVAILABLE"
+                : error.message === "SERVICE_BUSY"
+                  ? "SERVICE_BUSY"
+                  : "UPSTREAM_UNAVAILABLE",
           );
         }
-      });
+      };
+      server.setRequestHandler(CallToolRequestSchema, ({ params }) =>
+        executeTool(params),
+      );
       const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
@@ -463,6 +795,9 @@ export function createGateway(
     client().catch(() => {});
   });
   app.on("close", () => {
+    crowdmark.close?.().catch(() => {});
+    marmoset.close?.().catch(() => {});
+    odyssey.close?.().catch(() => {});
     upstream?.then((c) => c.close()).catch(() => {});
   });
   return app;

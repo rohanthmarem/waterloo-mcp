@@ -59,7 +59,23 @@ async function runningAudit() {
         ).stdout,
       )
     : [];
-  const report = await auditRunningHost(dir, containers);
+  const networkIds = [
+    ...new Set(
+      containers.flatMap((c) =>
+        Object.values(c.NetworkSettings.Networks)
+          .map((n) => n.NetworkID)
+          .filter(Boolean),
+      ),
+    ),
+  ];
+  if (networkIds.some((id) => !/^[a-f0-9]{12,64}$/.test(id)))
+    throw new Error("HOST_INSPECT_FAILED");
+  const networks = networkIds.length
+    ? JSON.parse(
+        (await capture("docker", ["network", "inspect", ...networkIds])).stdout,
+      )
+    : [];
+  const report = await auditRunningHost(dir, containers, root, networks);
   console.log(JSON.stringify(report));
   if (!report.passed) throw new Error("HOST_ISOLATION_FAILED");
 }
@@ -142,6 +158,7 @@ try {
           owner: flags.owner,
           username: flags.username,
           port: Number(flags.port),
+          racket: args.includes("--racket"),
         }),
       ),
     );
@@ -152,15 +169,29 @@ try {
     const audit = await auditHost(dir);
     console.log(JSON.stringify(audit));
     if (!audit.passed || !audit.users) throw new Error("HOST_ISOLATION_FAILED");
-    if (command === "start")
-      await run("docker", [
+    if (command === "start") {
+      const users = (await loadHost(dir)).users;
+      const up = [
         "compose",
         "-f",
         path.join(dir, "compose.json"),
         "up",
         "-d",
         "--build",
-      ]);
+      ];
+      await run("docker", [...up, ...users.map((u) => u.id)]);
+      const runners = users
+        .filter((u) => u.racket)
+        .map((u) => "racket_" + u.id);
+      if (runners.length) {
+        try {
+          await run("docker", [...up, ...runners]);
+        } catch (e) {
+          if (stopping) throw e;
+          throw new Error("HOST_RACKET_START_FAILED");
+        }
+      }
+    }
     if (command === "start" || args.includes("--running")) await runningAudit();
   } else if (command === "stop" || command === "status")
     await run("docker", [
@@ -209,7 +240,9 @@ try {
           : "HOST_SETUP_FAILED",
         action: stopping
           ? "The command was interrupted. Its admin lock is released after the active operation stops."
-          : "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
+          : error.message === "HOST_RACKET_START_FAILED"
+            ? "The MCP services started, but an optional Racket runner failed. Check that runner image and retry host start; existing MCP services remain available. Run host audit --running to inspect the services that started."
+            : "Check setup arguments and private/hosting. Existing user directories and keys are never replaced. Run audit before starting.",
       },
     }),
   );

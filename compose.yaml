@@ -2,6 +2,13 @@ services:
   mcp:
     build: .
     restart: unless-stopped
+    # Reaps Chromium helpers that exit after their parent, instead of leaving zombies under node.
+    init: true
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
     env_file: .env
     ports:
       - "127.0.0.1:8000:8000"

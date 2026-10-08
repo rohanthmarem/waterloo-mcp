@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Racket workspace · Waterloo MCP</title>
+    <link rel="stylesheet" href="/racket/style.css" />
+    <script src="/racket/app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <a href="/connection">← Waterloo MCP</a>
+      <h1>Racket workspace</h1>
+      <p>Your assignment, code, and run results in one place.</p>
+    </header>
+    <nav aria-label="Workspaces">
+      <label
+        >Saved workspace
+        <select id="workspaces">
+          <option value="">Choose a workspace</option>
+        </select></label
+      ><button id="load">Open</button><button id="new">New workspace</button
+      ><span id="revision">New · not saved</span>
+    </nav>
+    <p id="message" role="status" aria-live="polite">
+      Create a workspace or open one to begin.
+    </p>
+    <section class="details">
+      <label
+        >Workspace ID
+        <input
+          id="id"
+          placeholder="cs135-a01"
+          maxlength="40"
+          pattern="[a-z][a-z0-9-]*" /></label
+      ><label
+        >Title
+        <input
+          id="title"
+          placeholder="CS 135 · Assignment 1"
+          maxlength="160" /></label
+      ><label
+        >Language
+        <select id="language">
+          <option>htdp/bsl</option>
+          <option>htdp/bsl+</option>
+          <option>htdp/isl</option>
+          <option>htdp/isl+</option>
+          <option>htdp/asl</option>
+          <option>racket</option>
+        </select></label
+      >
+    </section>
+    <main>
+      <section class="panel">
+        <h2>Assignment</h2>
+        <p>
+          Paste the instructions here, or ask your agent to copy an assignment
+          you can read in LEARN. Agent changes need your approval.
+        </p>
+        <label
+          >Assignment title
+          <input id="assignment-title" maxlength="160" /></label
+        ><label
+          >Source link
+          <input
+            id="assignment-url"
+            type="url"
+            placeholder="https://learn.uwaterloo.ca/..." /></label
+        ><a id="source-link" target="_blank" rel="noopener noreferrer" hidden
+          >Open assignment source ↗</a
+        ><label
+          >Instructions
+          <textarea
+            id="assignment-text"
+            placeholder="Assignment instructions and notes…"
+          ></textarea>
+        </label>
+      </section>
+      <section class="panel">
+        <h2>Code</h2>
+        <p>
+          The selected language supplies <code>#lang</code>. Enter the program
+          body below.
+        </p>
+        <label class="sr-only" for="code">Racket program</label
+        ><textarea
+          id="code"
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        >
+; Your program goes here.
+(define (square x) (* x x))
+(check-expect (square 4) 16)</textarea
+        >
+        <div class="actions">
+          <button id="save">Save changes</button
+          ><button id="run" disabled>Run saved code</button>
+        </div>
+        <p class="hint">
+          Runs have no network or school credentials. Limit: 10 seconds and 32
+          KiB of output. No coursework is submitted.
+        </p>
+      </section>
+    </main>
+    <section class="results">
+      <h2>Run results</h2>
+      <p id="run-status">
+        No run yet. A completed run does not mean every test passed; read the
+        output.
+      </p>
+      <pre id="output" tabindex="0"></pre>
+    </section>
+    <footer>
+      Agents use the same saved revision. Conflicting edits are rejected.
+      Unsaved typing stays in this tab.
+    </footer>
+  </body>
+</html>

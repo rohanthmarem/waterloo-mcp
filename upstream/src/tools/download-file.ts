@@ -18,6 +18,7 @@ import {
 import { secureDownload } from "../utils/download-helpers.js";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { readBoundedCourseFile } from "./read-course-file.js";
 
 /**
  * Register download_file tool
@@ -31,7 +32,7 @@ export function registerDownloadFile(
     {
       title: "Download File",
       description:
-        "Download a file from course content or assignment submissions to a local directory. Use this when the user wants to download, save, or get a file from Brightspace course content or dropbox submissions. IMPORTANT: You MUST ask the user where they want to save the file before calling this tool. Never guess or assume a download directory. After identifying the file to download, suggest a clean readable filename to the user (e.g., 'Lecture 7 - Memory Management.pdf' instead of 'L07_CS251_2026SP_v2.pdf') and ask if they'd like to rename it. Pass their preferred name as customFilename, or omit it to keep the original.",
+        "Save a file from course content or assignment submissions on the MCP host. Use fileUrl for /content/enforced/ links inside course pages that have no topicId; the server reuses its saved LEARN login. Otherwise use topicId or submission folderId/fileId. Saving requires owner approval. The result is a server path, not a chat attachment or public URL. IMPORTANT: You MUST ask the user where they want to save the file before calling this tool. Never guess or assume a download directory. After identifying the file to download, suggest a clean readable filename to the user (e.g., 'Lecture 7 - Memory Management.pdf' instead of 'L07_CS251_2026SP_v2.pdf') and ask if they'd like to rename it. Pass their preferred name as customFilename, or omit it to keep the original.",
       inputSchema: DownloadFileSchema,
     },
     async (args: any) => {
@@ -39,8 +40,11 @@ export function registerDownloadFile(
         log("DEBUG", "download_file tool called", { args });
 
         // Parse and validate input
-        const { courseId, topicId, folderId, fileId, downloadPath, customFilename } =
+        const { courseId, topicId, fileUrl, folderId, fileId, downloadPath, customFilename } =
           DownloadFileSchema.parse(args);
+
+        if (fileUrl !== undefined && (topicId !== undefined || folderId !== undefined || fileId !== undefined))
+          return errorResponse("INVALID_FILE_SOURCE: use fileUrl alone, without topicId, folderId, or fileId.");
 
         // Validate courseId
         validateContentId(courseId);
@@ -70,7 +74,18 @@ export function registerDownloadFile(
         }
 
         // Determine download source
-        if (topicId !== undefined) {
+        if (fileUrl !== undefined) {
+          const response = await apiClient.getCourseFile(courseId, fileUrl);
+          const filename = parseContentDispositionFilename(response.headers.get("content-disposition") ?? "") ??
+            decodeURIComponent(new URL(fileUrl, "https://learn.uwaterloo.ca").pathname.split("/").pop() || "download");
+          const buffer = await readBoundedCourseFile(response, MAX_FILE_SIZE);
+          if (filename.toLowerCase().endsWith(".pdf") && buffer.subarray(0, 5).toString() !== "%PDF-")
+            throw new Error("COURSE_FILE_NOT_PDF: server did not return PDF data.");
+          const result = await secureDownload({ targetDir: downloadPath, filename: customFilename || filename, data: buffer });
+          return toolResponse({ success: true, filePath: result.path, fileSize: result.size, mimeType: result.mime,
+            originalFilename: filename,
+            message: "File saved on the MCP host. This server path is not an attachment or a public download URL; do not tell the user it is attached to chat." });
+        } else if (topicId !== undefined) {
           // Content file download
           validateContentId(topicId);
           return await downloadContentFile(
@@ -94,7 +109,7 @@ export function registerDownloadFile(
           );
         } else {
           return errorResponse(
-            "Either topicId (for content files) or both folderId and fileId (for submission files) must be provided"
+            "Provide fileUrl (a linked LEARN course file), topicId (a content topic), or both folderId and fileId (a submission file)."
           );
         }
       } catch (error) {
