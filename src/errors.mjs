@@ -49,6 +49,24 @@ export const ERRORS = {
     "Report this code and the operation. Do not repeatedly sign in or guess alternate API methods.",
     false,
   ],
+  MAIL_NOT_FOUND: [
+    404,
+    "The forwarded message or attachment was not found.",
+    "Use a messageId from list_outlook_messages or search_outlook_messages, and an attachment index from get_outlook_message. Old messages are removed when storage limits are reached.",
+    false,
+  ],
+  MAIL_MESSAGE_INVALID: [
+    400,
+    "The delivered message could not be read as email.",
+    "Send the unchanged raw message as message/rfc822.",
+    false,
+  ],
+  MAIL_STATE_INVALID: [
+    500,
+    "The encrypted Outlook mail store could not be read.",
+    "Restore the matching state and session key. Do not delete the store while forwarding is active.",
+    false,
+  ],
   ROOM_NOT_FOUND: [
     404,
     "The study room was not found.",
@@ -142,7 +160,7 @@ export const ERRORS = {
   REQUEST_TOO_LARGE: [
     413,
     "The request is too large.",
-    "Send a smaller request: 64 KiB for normal requests, or 1 MiB for a browser-session import.",
+    "Send a smaller request: 64 KiB for normal requests, 1 MiB for a browser-session import, or 25 MiB for a forwarded email.",
     false,
   ],
   TOOL_UNSUPPORTED: [

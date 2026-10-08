@@ -69,6 +69,14 @@ describe("extractZipEntry", () => {
     expect(extractZipEntry(zip, "a.txt")?.toString()).toBe("hello");
   });
 
+  it("refuses an entry that inflates beyond the size limit", () => {
+    const zip = buildZip([
+      { name: "bomb.xml", content: Buffer.alloc(40 * 1024 * 1024), deflate: true },
+    ]);
+    expect(zip.length).toBeLessThan(100 * 1024);
+    expect(extractZipEntry(zip, "bomb.xml")).toBeNull();
+  });
+
   it("reads a deflated entry", () => {
     const body = "x".repeat(500);
     const zip = buildZip([{ name: "b.txt", content: Buffer.from(body), deflate: true }]);

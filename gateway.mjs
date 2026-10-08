@@ -28,6 +28,8 @@ import { ReadCache } from "./src/read-cache.mjs";
 import { encrypt } from "./upstream/build/auth/encrypted-store.js";
 import { PiazzaSession, PiazzaError } from "./src/piazza-session.mjs";
 import { Piazza, piazzaTools, piazzaSchemas } from "./piazza.mjs";
+import { MailStore, MailError, MAIL_LIMITS } from "./src/mail-store.mjs";
+import { Outlook, outlookTools, outlookSchemas } from "./outlook.mjs";
 
 const expensive = new Set([
   "get_course_home",
@@ -57,7 +59,9 @@ function httpError(res, code) {
   const p = problem(code);
   reply(res, p.httpStatus, p);
 }
-async function body(req, limit = 65536) {
+async function bodyBuffer(req, limit) {
+  if (Number(req.headers["content-length"]) > limit)
+    throw new Error("REQUEST_TOO_LARGE");
   let size = 0;
   const chunks = [];
   for await (const chunk of req) {
@@ -65,8 +69,15 @@ async function body(req, limit = 65536) {
     if (size > limit) throw new Error("REQUEST_TOO_LARGE");
     chunks.push(chunk);
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
 }
+const body = async (req, limit = 65536) =>
+  (await bodyBuffer(req, limit)).toString("utf8");
+// Agent tokens reach MCP only; a mail-ingest token can only deliver mail.
+const clientRoutes = {
+  mcp: ["/mcp", "/status"],
+  "mail-ingest": ["/ingest/mail"],
+};
 
 export function createGateway(
   config,
@@ -74,11 +85,14 @@ export function createGateway(
   {
     libcal = new LibCal(config),
     piazzaSession = new PiazzaSession(config),
+    mailStore = new MailStore(config),
   } = {},
 ) {
   const approvals = new Authorizations(path.join(config.stateDir, "approvals"));
   const cache = new ReadCache();
   const piazza = new Piazza(piazzaSession);
+  const outlook = new Outlook(mailStore);
+  let ingesting = 0;
   const portable =
     config.authMode === "portable" ? new PortableAuth(config) : null;
   let upstream;
@@ -94,6 +108,7 @@ export function createGateway(
       if (req.url === "/health" && req.method === "GET")
         return reply(res, 200, { status: "running" });
       let caller = "owner-browser";
+      let role = "owner";
       if (portable) {
         if (!portable.validHost(req)) return httpError(res, "HOST_REJECTED");
         if (req.headers.origin && req.headers.origin !== config.origin)
@@ -101,7 +116,7 @@ export function createGateway(
         const loginUrl = new URL(req.url, config.origin);
         const requestedNext = loginUrl.searchParams.get("next");
         const ownerPath = (value) =>
-          /^\/(?:connection|setup(?:\/piazza)?|approvals\/[a-f0-9]{32,128})$/.test(
+          /^\/(?:connection|setup(?:\/piazza|\/outlook)?|approvals\/[a-f0-9]{32,128})$/.test(
             value ?? "",
           );
         const next = ownerPath(requestedNext) ? requestedNext : "/connection";
@@ -157,9 +172,13 @@ export function createGateway(
           }
           return httpError(res, "AUTH_REQUIRED");
         }
-        if (identity.role === "mcp" && !["/mcp", "/status"].includes(req.url))
+        if (
+          identity.role !== "owner" &&
+          !clientRoutes[identity.role]?.includes(req.url)
+        )
           return httpError(res, "CLIENT_REVOKED");
         caller = identity.id;
+        role = identity.role;
       } else {
         // Trust only exe.dev's private authenticated proxy. Never expose this port publicly.
         if (req.headers["x-exedev-email"]?.toLowerCase() !== config.owner)
@@ -179,19 +198,53 @@ export function createGateway(
             ),
           );
           if (
-            ctx.role !== "mcp" ||
+            !Object.hasOwn(clientRoutes, ctx.role) ||
             !clients.some(
-              (c) => c.id === ctx.id && c.enabled && c.expiresAt > Date.now(),
+              (c) =>
+                c.id === ctx.id &&
+                (c.role ?? "mcp") === ctx.role &&
+                c.enabled &&
+                c.expiresAt > Date.now(),
             )
           )
             return httpError(res, "CLIENT_REVOKED");
-          if (!["/mcp", "/status"].includes(req.url))
+          if (!clientRoutes[ctx.role].includes(req.url))
             return httpError(res, "CLIENT_REVOKED");
           caller = ctx.id;
+          role = ctx.role;
         }
       }
       if (req.headers.origin && req.headers.origin !== config.origin)
         return httpError(res, "ORIGIN_REJECTED");
+      if (req.url === "/ingest/mail") {
+        if (role !== "mail-ingest") return httpError(res, "CLIENT_REVOKED");
+        if (
+          req.method !== "POST" ||
+          !req.headers["content-type"]?.startsWith("message/rfc822")
+        )
+          return httpError(res, "INPUT_INVALID");
+        // Each delivery can hold 25 MiB in memory; the Worker retries a busy response.
+        if (ingesting >= 2) return httpError(res, "SERVICE_BUSY");
+        ingesting++;
+        try {
+          const result = await mailStore.ingest(
+            await bodyBuffer(req, MAIL_LIMITS.maxMessageBytes),
+          );
+          // 202: received but not stored. The sender must not retry or bounce it.
+          return reply(res, result.stored ? 200 : 202, result);
+        } catch (error) {
+          return httpError(
+            res,
+            error.message === "REQUEST_TOO_LARGE"
+              ? error.message
+              : error instanceof MailError
+                ? error.code
+                : "INTERNAL_ERROR",
+          );
+        } finally {
+          ingesting--;
+        }
+      }
       if (req.url === "/account" && req.method === "GET")
         return reply(res, 200, {
           username: config.username,
@@ -251,6 +304,52 @@ export function createGateway(
           );
         }
       }
+      if (req.url === "/setup/outlook" && req.method === "GET") {
+        const status = await mailStore.status();
+        const deliveries = await mailStore.deliveries();
+        return reply(
+          res,
+          200,
+          `<title>Outlook forwarding</title><h1>Outlook forwarding</h1><p>${status.messageCount} forwarded messages stored. Newest arrival: ${escape(status.newestReceivedAt ?? "none yet")}.</p><h2>Recent deliveries</h2>${
+            deliveries.length
+              ? `<table><tr><th>Time</th><th>Result</th><th>Passing signers</th><th>Failing signers</th><th>Bytes</th></tr>${deliveries
+                  .map(
+                    (d) =>
+                      `<tr><td>${escape(d.at)}</td><td>${escape(d.stored ? "stored" : "rejected: " + d.reason)}</td><td>${escape(d.passingSigners.join(", ") || "none")}</td><td>${escape(d.failingSigners.join(", ") || "none")}</td><td>${escape(d.size)}</td></tr>`,
+                  )
+                  .join("")}</table>`
+              : "<p>None yet. Send yourself a test message.</p>"
+          }<h2>Trusted signers</h2><p>Every message sent to your forwarding address is stored. Optionally require a passing DKIM signature from a trusted domain. Turn this on only if the passing signers above show that all real forwarded mail, including mail from outside Waterloo, carries one.</p><form method="post"><label><input type="checkbox" name="requireTrustedSigner" value="on"${status.requireTrustedSigner ? " checked" : ""}> Reject mail without a trusted signer</label><br><label>Trusted domains <input name="trustedSigners" value="${escape(status.trustedSigners.join(", "))}" required maxlength="2000"></label><br><button>Save</button></form>`,
+          "text/html; charset=utf-8",
+        );
+      }
+      if (req.url === "/setup/outlook" && req.method === "POST") {
+        if (
+          req.headers.origin !== config.origin ||
+          !req.headers["content-type"]?.startsWith(
+            "application/x-www-form-urlencoded",
+          )
+        )
+          return httpError(res, "ORIGIN_REJECTED");
+        try {
+          const form = new URLSearchParams(await body(req));
+          const policy = await mailStore.setPolicy({
+            requireTrustedSigner: form.get("requireTrustedSigner") === "on",
+            trustedSigners: form.get("trustedSigners"),
+          });
+          return reply(
+            res,
+            200,
+            `<h1>Outlook policy saved</h1><p>${policy.requireTrustedSigner ? "Mail without a passing signature from " + escape(policy.trustedSigners.join(", ")) + " is rejected." : "All mail sent to your forwarding address is stored."}</p><p><a href="/setup/outlook">Back</a></p>`,
+            "text/html; charset=utf-8",
+          );
+        } catch (error) {
+          return httpError(
+            res,
+            error instanceof MailError ? error.code : "INPUT_INVALID",
+          );
+        }
+      }
       if (req.url === "/status" && req.method === "GET")
         return reply(res, 200, {
           service: "waterloo-mcp",
@@ -298,7 +397,7 @@ export function createGateway(
         return reply(
           res,
           200,
-          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
+          `<title>Waterloo MCP</title><h1>Waterloo MCP</h1><p>Connected as ${escape(config.owner)}.</p><p>MCP URL: ${escape(config.origin)}/mcp</p><p>Use npm run client to add or revoke an agent. Use npm run login to update your Waterloo session. On a headless host, run npm run login -- --remote=${escape(config.origin)} --token-file=OWNER_TOKEN_FILE on your own computer. Never send your owner key to an agent.</p><h2>Piazza</h2><p><a href="/setup/piazza">Connect or update your Piazza login</a>. Piazza uses its own saved login and renews on this VM.</p><h2>Outlook</h2><p><a href="/setup/outlook">Check forwarded Outlook mail and recent deliveries</a>. See docs/outlook.md to set up forwarding.</p><h2>Optional unattended renewal password</h2><p>Only needed after you set up your own separate test authenticator. This form encrypts your password on this server.</p><form method="post" action="/setup"><label>Waterloo password <input type="password" name="password" required maxlength="512" autocomplete="current-password"></label><button>Save encrypted password</button></form>`,
           "text/html; charset=utf-8",
         );
       if (req.url === "/setup" && req.method === "POST") {
@@ -364,6 +463,7 @@ export function createGateway(
           outlineTool,
           ...roomTools,
           ...piazzaTools,
+          ...outlookTools,
         ]
           .filter((t) => KNOWN_TOOLS.has(t.name))
           .map(describeTool),
@@ -419,15 +519,17 @@ export function createGateway(
             normalizeToolResult(
               Object.hasOwn(piazzaSchemas, name)
                 ? await piazza.call(name, args)
-                : roomSchemas[name]
-                  ? await libcal.call(name, args)
-                  : name === "get_course_outline"
-                    ? await getCourseOutline(await client(), args)
-                    : await (
-                        await client()
-                      ).callTool({ name, arguments: args }, undefined, {
-                        timeout: 180000,
-                      }),
+                : Object.hasOwn(outlookSchemas, name)
+                  ? await outlook.call(name, args)
+                  : roomSchemas[name]
+                    ? await libcal.call(name, args)
+                    : name === "get_course_outline"
+                      ? await getCourseOutline(await client(), args)
+                      : await (
+                          await client()
+                        ).callTool({ name, arguments: args }, undefined, {
+                          timeout: 180000,
+                        }),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)

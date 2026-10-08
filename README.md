@@ -1,6 +1,6 @@
 # Waterloo MCP
 
-Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, Odyssey assessment schedule, published course outlines, and library study-room bookings. Host on a Docker-capable computer or server and connect any MCP client that supports Streamable HTTP with a custom authentication header. Choose one user or several isolated users on the same device.
+Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, forwarded Outlook mail, Odyssey assessment schedule, published course outlines, and library study-room bookings. Host on a Docker-capable computer or server and connect any MCP client that supports Streamable HTTP with a custom authentication header. Choose one user or several isolated users on the same device.
 
 **Each person gets a separate instance and signs in with their own Waterloo account.** A shared host runs a separate container, keys, saved state, browser process, cache, and approvals for every user. Sharing this repository does not share an account, a session, or access to course material.
 
@@ -8,13 +8,13 @@ This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MC
 
 ## What you get
 
-- 34 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.
+- 39 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Outlook mail, Odyssey, and library study rooms.
 - Text extraction from HTML, PDFs and Office files; PDF page images for handwritten notes; local audio/video transcription.
 - Separate tokens for your agents, with expiry and revocation.
 - Browser approval before a tool saves a download, books a room, or cancels a booking. Agents cannot approve their own requests through their MCP token.
 - Encrypted saved login state, repeatable Docker deployment, and errors with a code and a next step.
 
-See [Piazza setup](docs/piazza.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md). Outlook mail is not included.
+See [Piazza setup](docs/piazza.md), [Outlook mail forwarding](docs/outlook.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md).
 
 ## Recommended: host on your chosen device
 
@@ -127,6 +127,10 @@ The first check lists tools. `--live` checks authentication, courses, and Odysse
 
 Open `https://YOUR-VM.exe.xyz/setup/piazza` as the owner. Enter your Piazza login and wait for **Piazza connected**. Refresh the MCP tool list, then call `check_piazza_auth` and `list_piazza_classes`. The encrypted login renews on the VM; your local computer can be offline. See [Piazza setup and limits](docs/piazza.md).
 
+### 7. Forward Outlook mail (optional)
+
+Waterloo does not grant direct mailbox access, so Outlook forwards new mail to a private address on your own Cloudflare domain. A small Cloudflare Email Worker passes each message to the VM, which records its signature results, encrypts it, and serves it through five read-only tools. Only mail received after forwarding is enabled is available. See [Outlook mail](docs/outlook.md).
+
 ## Everyday use
 
 | Task                               | Command                                                                             |
@@ -151,7 +155,9 @@ authorization.mjs    Tool allowlist and one-use approvals
 outlines.mjs         Course outline discovery
 libcal.mjs           Study-room tools and encrypted booking history
 piazza.mjs           Read-only Piazza classes, feeds, search, and discussions
-src/                 Configuration, errors, bounded read cache
+outlook.mjs          Read-only tools for forwarded Outlook mail
+src/                 Configuration, errors, bounded read cache, encrypted mail store
+examples/            Client configuration and the Cloudflare Email Worker for Outlook
 scripts/             Setup, login, client tokens, deploy, diagnostics
 upstream/            Vendored MIT Brightspace client plus Waterloo readers
 renew.mjs            Saved-session and optional authenticator renewal

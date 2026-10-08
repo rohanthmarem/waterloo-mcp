@@ -1,5 +1,14 @@
 # Changes
 
+## Unreleased
+
+- Add five read-only Outlook tools for mail forwarded from Waterloo Outlook: status, list, search, full message text, and attachment text.
+- Add a Cloudflare Email Worker example and a `POST /ingest/mail` route. Issue its token with `--mail-ingest`; it can only deliver mail, and agent or owner credentials cannot.
+- Record DKIM results on each message, with an optional owner policy that requires a trusted signer. Reject signature floods, partial-body signatures, and repeated identity headers. Never bounce mail, so the forwarding address is not revealed to senders.
+- Encrypt messages, bodies, and the index with the session key. Keep at most 5,000 messages or 2 GiB.
+- Add an owner page at `/setup/outlook` showing recent deliveries (signing domains only) and the signer policy.
+- Cap decompressed Office document parts at 32 MiB, for both email attachments and course files.
+
 ## 0.4.0
 
 - Add portable hosting on Docker-capable computers and servers, with single-user and per-user-container modes.

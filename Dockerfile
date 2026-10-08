@@ -20,7 +20,7 @@ COPY upstream/package.json ./upstream/package.json
 COPY --from=build /app/upstream/build ./upstream/build
 COPY src ./src
 COPY scripts ./scripts
-COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs renew.mjs transcribe.py ./
+COPY gateway.mjs authorization.mjs outlines.mjs libcal.mjs piazza.mjs outlook.mjs renew.mjs transcribe.py ./
 ENV NODE_ENV=production WATERLOO_SERVICE=1 WATERLOO_BIND=0.0.0.0 WATERLOO_STATE_DIR=/state WATERLOO_SECRETS_DIR=/run/secrets D2L_BASE_URL=https://learn.uwaterloo.ca D2L_SESSION_DIR=/state/sessions
 USER pwuser
 EXPOSE 8000

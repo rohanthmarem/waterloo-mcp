@@ -8,7 +8,7 @@ Use Streamable HTTP at `https://YOUR-VM.exe.xyz/mcp` with the custom header `X-E
 2. Deploy the registry with `npm run deploy -- YOUR-VM.exe.xyz clients` if the server already exists.
 3. Import the generated `.token` file into the agent’s secret store.
 4. Configure the URL and header. Do not put the token in prompts, source control, screenshots, or logs.
-5. List tools and run `check_auth` and `get_my_courses`. If Piazza is connected, also run `check_piazza_auth` and `list_piazza_classes`. Release 0.3.0 advertises 34 tools.
+5. List tools and run `check_auth` and `get_my_courses`. If Piazza is connected, also run `check_piazza_auth` and `list_piazza_classes`. If Outlook forwarding is set up, run `check_outlook_mail`. This release advertises 39 tools.
 
 Tokens expire after 90 days. To replace one, revoke its name and issue a new token. Deploy the registry after either operation. Revocation takes effect on subsequent requests after the VM receives the new registry; it does not cancel an already-running call.
 
