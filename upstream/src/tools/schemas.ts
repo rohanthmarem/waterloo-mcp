@@ -64,6 +64,8 @@ export const DownloadFileSchema = z.object({
     .describe("Course ID the file belongs to."),
   topicId: z.coerce.number().int().positive().optional()
     .describe("Content topic ID to download (for course content files)."),
+  fileUrl: z.string().min(1).max(4096).optional()
+    .describe("LEARN /content/enforced/ file URL linked inside a course page. Use this when a PDF has no separate topicId. Must belong to courseId; do not use a browser login URL."),
   folderId: z.coerce.number().int().positive().optional()
     .describe("Dropbox folder ID (for submission/feedback file downloads)."),
   fileId: z.coerce.number().int().positive().optional()

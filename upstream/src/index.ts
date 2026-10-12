@@ -1,6 +1,7 @@
 import { registerOdyssey } from './tools/odyssey.js';
 import { registerMediaReader } from './tools/media-reader.js';
 import { registerReadCoverage } from './tools/read-coverage.js';
+import { registerReadCourseFile } from './tools/read-course-file.js';
 import { errorResponse, sanitizeError, toolResponse } from './tools/tool-helpers.js';
 /**
  * Brightspace MCP Server
@@ -204,6 +205,7 @@ if (subcommand === 'setup') {
       // Register MCP tools
       registerOdyssey(server);
       registerReadCoverage(server, apiClient);
+      registerReadCourseFile(server, apiClient);
       registerMediaReader(server, apiClient);
       registerGetMyCourses(server, apiClient, config);
       registerGetUpcomingDueDates(server, apiClient, config);

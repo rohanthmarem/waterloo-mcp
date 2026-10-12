@@ -49,12 +49,16 @@ export function errorResponse(message: string): CallToolResult {
 export function sanitizeError(error: unknown): CallToolResult {
   // Log full error to stderr for debugging (token redaction handled by logger)
   log("ERROR", "Tool error", error);
-  if (error instanceof AuthError || error instanceof SessionStoreError) {
+  if (error instanceof Error && /^(?:INVALID_COURSE_FILE_URL|COURSE_FILE_TOO_LARGE|COURSE_FILE_NOT_PDF):/.test(error.message))
+    return errorResponse(error.message);
+  if ((error instanceof AuthError && !(error instanceof ApiError)) || error instanceof SessionStoreError) {
     return errorResponse('Authentication state needs attention. Run npm run login, then deploy the updated session.');
   }
 
   // Map to user-friendly messages
   if (error instanceof ApiError) {
+    if (error.status === 400 && error.message.endsWith(": COURSE_FILE_REDIRECT_BLOCKED"))
+      return errorResponse("COURSE_FILE_REDIRECT_BLOCKED: the file redirected outside its allowed course directory. No credentials were sent to that destination.");
     if (error.status === 404) {
       return errorResponse(
         "Resource not found. The course or item may not exist, or you may not have access."

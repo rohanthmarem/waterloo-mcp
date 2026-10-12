@@ -1,20 +1,24 @@
 # Waterloo MCP
 
-Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, Odyssey assessment schedule, published course outlines, and library study-room bookings. Host on a Docker-capable computer or server and connect any MCP client that supports Streamable HTTP with a custom authentication header. Choose one user or several isolated users on the same device.
+Give your cloud agents access to your Waterloo LEARN courses, Piazza discussions, forwarded Outlook mail, Odyssey assessment schedule, published course outlines, and library study-room bookings. Host on a Docker-capable computer or server and connect any MCP client that supports Streamable HTTP with a custom authentication header. Choose one user or several isolated users on the same device.
 
 **Each person gets a separate instance and signs in with their own Waterloo account.** A shared host runs a separate container, keys, saved state, browser process, cache, and approvals for every user. Sharing this repository does not share an account, a session, or access to course material.
 
 This is an unofficial personal project, based on [Rohan Muppa’s Brightspace MCP server](https://github.com/RohanMuppa/brightspace-mcp-server). It is not affiliated with Waterloo, D2L, Duo, Piazza, or exe.dev.
 
+Optional: [Racket workspaces driven through MCP](docs/racket.md), with assignment text, code editing, test runs, and an owner browser view. Add `--racket` to a hosted user.
+
 ## What you get
 
-- 34 tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.
+- 34 core tools for courses, announcements, grades, assignments, discussions, course content, outlines, Piazza, Odyssey, and library study rooms.
+- Five read-only tools for Outlook mail forwarded from your Waterloo inbox.
+- Four optional Racket tools to list, read, save, and run assignment workspaces.
 - Text extraction from HTML, PDFs and Office files; PDF page images for handwritten notes; local audio/video transcription.
 - Separate tokens for your agents, with expiry and revocation.
-- Browser approval before a tool saves a download, books a room, or cancels a booking. Agents cannot approve their own requests through their MCP token.
+- Browser approval before an agent saves a download, books or cancels a room, saves Racket code, or runs it. Agents cannot approve their own requests through their MCP token.
 - Encrypted saved login state, repeatable Docker deployment, and errors with a code and a next step.
 
-See [Piazza setup](docs/piazza.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md). Outlook mail is not included.
+See [Piazza setup](docs/piazza.md), [Outlook mail forwarding](docs/outlook.md), [study-room booking](docs/study-rooms.md) and [tool coverage and limits](docs/tools.md).
 
 ## Recommended: host on your chosen device
 
@@ -127,7 +131,13 @@ The first check lists tools. `--live` checks authentication, courses, and Odysse
 
 Open `https://YOUR-VM.exe.xyz/setup/piazza` as the owner. Enter your Piazza login and wait for **Piazza connected**. Refresh the MCP tool list, then call `check_piazza_auth` and `list_piazza_classes`. The encrypted login renews on the VM; your local computer can be offline. See [Piazza setup and limits](docs/piazza.md).
 
-## Everyday use
+### 7. Forward Outlook mail (optional)
+
+Waterloo does not grant direct mailbox access, so Outlook forwards new mail to a private address on your own Cloudflare domain. A small Cloudflare Email Worker passes each message to the VM, which records its signature results, encrypts it, and serves it through five read-only tools. Only mail received after forwarding is enabled is available. See [Outlook mail](docs/outlook.md).
+
+## Everyday use: legacy exe.dev
+
+For portable hosting, use the per-user commands in [operations](docs/operations.md#portable-hosting). Do not use the legacy deployment commands against generated hosting profiles.
 
 | Task                               | Command                                                                             |
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
@@ -151,7 +161,11 @@ authorization.mjs    Tool allowlist and one-use approvals
 outlines.mjs         Course outline discovery
 libcal.mjs           Study-room tools and encrypted booking history
 piazza.mjs           Read-only Piazza classes, feeds, search, and discussions
-src/                 Configuration, errors, bounded read cache
+outlook.mjs          Read-only tools for forwarded Outlook mail
+src/                 Configuration, errors, read cache, encrypted Racket workspaces and mail store
+racket-runner/       Separate restricted Racket execution service
+web/                 Optional owner assignment and code editor
+examples/            Client configuration and the Cloudflare Email Worker for Outlook
 scripts/             Setup, login, client tokens, deploy, diagnostics
 upstream/            Vendored MIT Brightspace client plus Waterloo readers
 renew.mjs            Saved-session and optional authenticator renewal
@@ -160,4 +174,37 @@ bench/               Offline performance suite against a fake LEARN; see docs/pe
 private/             Your local secrets and state; never shared
 ```
 
-Release 0.4.0 adds portable authentication, single/multi-user hosting, remote login import, and isolation audits. The tool catalog remains at 34. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+Release 0.4.0 adds portable authentication, single/multi-user hosting, remote login import, and isolation audits. The catalog has 34 core tools, or 38 with the unreleased Racket feature enabled. Study-room booking still requires exact owner approval. See [contributing](CONTRIBUTING.md) and [third-party notices](THIRD_PARTY_NOTICES.md).
+
+## Documentation map
+
+- [Hosting](docs/hosting.md): choose a device, add users, configure HTTPS, and audit separation.
+- [Clients](docs/clients.md): connect Grokbot or another MCP agent and refresh its tools.
+- [Authentication](docs/authentication.md): import a school login and recover an expired session.
+- [Tools](docs/tools.md): supported reads, optional tools, and approval rules.
+- [Racket](docs/racket.md): MCP examples, shared editing, execution limits, and troubleshooting.
+- [Operations](docs/operations.md): updates, private backups, restarts, and recovery.
+- [Security](SECURITY.md), [errors](docs/errors.md), and [verification](docs/verification.md): protections, failure handling, and tested limits.
+- [Contributing](CONTRIBUTING.md): source checks and tests without school credentials.
+
+### Marmoset reads
+
+Use the existing Waterloo login to read current Marmoset courses, project deadlines,
+submission history and published test results. Start with `list_marmoset_courses`.
+See [Marmoset setup and tools](docs/marmoset.md). Submission and release-test actions
+are not exposed.
+
+### Fewer round trips
+
+Use `read_many` to combine independent reads across services. Marmoset and Odyssey
+reuse per-user HTTP sessions after scripted sign-in, and `read_course_file` opens
+linked LEARN documents using the existing login. See [fast reads](docs/fast-reads.md)
+for measured speedups and limits.
+
+### Crowdmark answer photos
+
+Use the same Waterloo login to read Crowdmark assignments and questions, map your
+answer photos to questions, and save photos or typed answers after approval.
+Submitting for evaluation requires a separate approval. Images stay encrypted on
+the MCP host and expire after 24 hours. See [the Crowdmark workflow](docs/crowdmark.md)
+for transfer instructions, supported assignments and live-test status.

@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { ReadCache } from "../src/read-cache.mjs";
 import { readConfig } from "../src/config.mjs";
 import { normalizeToolResult } from "../src/errors.mjs";
@@ -84,4 +85,21 @@ test("outline discovery skips locked modules and reports unread children", () =>
     [1],
   );
   assert.equal(d.warnings.length, 1);
+});
+
+test("starting the gateway does not load Playwright", () => {
+  // Playwright costs the resident gateway about 40 MiB; browser and request
+  // contexts must import it on first use instead.
+  const probe = `
+    import { createRequire } from "node:module";
+    await import(${JSON.stringify(new URL("../gateway.mjs", import.meta.url).href)});
+    const loaded = Object.keys(createRequire(import.meta.url).cache);
+    console.log(loaded.filter((f) => /node_modules[\\\\/]playwright(-core)?[\\\\/]/.test(f)).length);
+  `;
+  const out = execFileSync(
+    process.execPath,
+    ["--input-type=module", "-e", probe],
+    { encoding: "utf8" },
+  );
+  assert.equal(out.trim(), "0");
 });

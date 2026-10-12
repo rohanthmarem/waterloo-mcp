@@ -12,6 +12,7 @@ import { discoverVersions } from "./version-discovery.js";
 import { ApiError, RateLimitError, NetworkError } from "./errors.js";
 import { withRetry, isRetryableFailure, retryAfterMsFrom, type RetryConfig } from "./retry.js";
 import { log } from "../utils/logger.js";
+import { courseFilePath } from "./course-file.js";
 
 /** An ordinary course HTML link to the login page is not an expired session. */
 function isExpiredSessionRedirect(body: string, baseUrl: string): boolean {
@@ -160,6 +161,12 @@ export class D2LApiClient {
    */
   async getRaw(path: string): Promise<Response> {
     return this.withAuthentication(path, token => this.makeRawRequest(path, token));
+  }
+
+  /** Linked files use the browser session, not the API bearer token. */
+  async getCourseFile(courseId: number, url: string): Promise<Response> {
+    const path = courseFilePath(this.baseUrl, courseId, url);
+    return this.withAuthentication(path, token => this.makeRawRequest(path, token, courseId));
   }
 
   /** One HTTP refresh and at most one browser login per caller. */
@@ -331,18 +338,46 @@ export class D2LApiClient {
   private async makeRawRequest(
     path: string,
     token: TokenData,
+    courseFileId?: number,
   ): Promise<Response> {
-    const url = `${this.baseUrl}${path}`;
+    let url = `${this.baseUrl}${path}`;
     const headers = this.buildAuthHeaders(token);
+    if (courseFileId !== undefined) {
+      if (token.tenantOrigin && token.tenantOrigin !== new URL(this.baseUrl).origin)
+        throw new ApiError(401, path, "The saved session belongs to a different school.");
+      const cookie = token.tenantOrigin === new URL(this.baseUrl).origin
+        ? token.cookieHeader : undefined;
+      if (!cookie && !token.accessToken.startsWith("cookie:"))
+        throw new ApiError(401, path, "The saved browser session is required for this course file.");
+      delete headers.Authorization;
+      if (cookie) headers.Cookie = cookie;
+    }
 
     try {
       log("DEBUG", `Requesting GET ${path} (raw)`);
 
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         method: "GET",
         headers,
         signal: AbortSignal.timeout(this.timeoutMs),
+        ...(courseFileId !== undefined ? { redirect: "manual" as const } : {}),
       });
+      if (courseFileId !== undefined) {
+        for (let redirects = 0; response.status >= 300 && response.status < 400; redirects++) {
+          const location = response.headers.get("location");
+          await response.body?.cancel();
+          if (!location || redirects >= 3) throw new ApiError(400, path, "COURSE_FILE_REDIRECT_BLOCKED");
+          const next = new URL(location, url);
+          if (/\/d2l\/login\b|\/adfs\/|\/signin\b/i.test(next.pathname))
+            throw new ApiError(401, path, "Course file redirected to sign-in.");
+          let nextPath: string;
+          try { nextPath = courseFilePath(this.baseUrl, courseFileId, next.href); } catch {
+            throw new ApiError(400, path, "COURSE_FILE_REDIRECT_BLOCKED");
+          }
+          url = `${this.baseUrl}${nextPath}`;
+          response = await fetch(url, { method: "GET", headers, redirect: "manual", signal: AbortSignal.timeout(this.timeoutMs) });
+        }
+      }
 
       // Preserve cookie material for the shared HTTP refresh path.
       if (response.status === 401) {
@@ -381,7 +416,10 @@ export class D2LApiClient {
       const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
       if (contentType.startsWith("text/html")) {
         const body = await response.text();
-        if (isExpiredSessionRedirect(body, this.baseUrl)) {
+        const loginForm = courseFileId !== undefined &&
+          /<form\b[^>]*action\s*=\s*["'][^"']*(?:\/adfs\/|\/d2l\/login|\/signin\b)/i.test(body) &&
+          /<input\b[^>]*type\s*=\s*["']password["']/i.test(body);
+        if (isExpiredSessionRedirect(body, this.baseUrl) || loginForm) {
           log("DEBUG", "File download answered with the session-expired stub, treating it as a 401");
           throw new ApiError(
             401,

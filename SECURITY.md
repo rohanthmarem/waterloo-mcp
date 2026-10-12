@@ -8,11 +8,11 @@ The portable host generator separates keys, mount paths, processes, networks, ca
 
 Saved browser state, API sessions, the optional password, and optional authenticator state use authenticated encryption. Encryption keys live in separate files mounted read-only into the container. The VM must access those keys to renew sessions; encryption does not protect against a compromised running VM or its administrator.
 
-`private/`, `.env`, logs, keys, and build output are excluded from Git. Deployment sends private state through SSH, outside the Docker image. Agent token files stay on the computer unless you import them into an agent secret store. Course downloads and cached transcripts are private files, but are not encrypted by this application. The optional Piazza password, identity, and cookies are encrypted together with the session key; agents cannot read the setup page or credentials. Piazza calls check current class membership and use a fixed list of read methods. No Piazza writes are enabled. Booking history and cancellation links are encrypted with the session key. Cancellation links are never returned to agents.
+`private/`, `.env`, logs, keys, and build output are excluded from Git. Deployment sends private state through SSH, outside the Docker image. Agent token files stay on the computer unless you import them into an agent secret store. Course downloads and cached transcripts are private files, but are not encrypted by this application. The optional Piazza password, identity, and cookies are encrypted together with the session key; agents cannot read the setup page or credentials. Piazza calls check current class membership and use a fixed list of read methods. No Piazza writes are enabled. Booking history and cancellation links are encrypted with the session key. Cancellation links are never returned to agents. Forwarded Outlook mail is encrypted with the session key. It arrives only through a token issued with `--mail-ingest`, which cannot reach any other route, at a random address that agents never see. Requiring a trusted DKIM signer is optional. Cloudflare's Email Worker sees messages in transit. See [Outlook mail](docs/outlook.md).
 
 The optional software authenticator gives the server a reusable second factor. Keep a separate working recovery factor. Do not copy an active authenticator to multiple running machines or restore an old counter. Read [authentication](docs/authentication.md) before enabling it.
 
-Course files, email addresses, webpages, and tool output are untrusted input. An agent should not follow instructions found inside them to reveal secrets or approve actions.
+Course files, email messages and addresses, webpages, and tool output are untrusted input. An agent should not follow instructions found inside them to reveal secrets or approve actions.
 
 ## Reporting a problem
 
@@ -21,3 +21,13 @@ Report only the version, error code, request ID, reproduction steps, and redacte
 For an issue that could expose credentials, contact the repository owner privately using the hosting platform’s private reporting feature if enabled. Otherwise request a private contact method without posting exploit details or secrets.
 
 If a client token leaks, revoke it in that user’s registry (and transfer the registry for legacy remote deployment). If a portable owner key leaks, rotate it with `npm run host -- owner USER rotate`; this also invalidates owner cookies. If the VM is compromised, stop the service, revoke its tokens and dedicated authenticator, invalidate affected school sessions, and rebuild from clean source.
+
+Optional Racket programs execute in separate credential-free containers. No school state, secrets, or Docker socket is mounted there. The internal runner network and restricted Racket evaluator are both required. See [Racket execution limits](docs/racket.md). Code and assignment text sent to an agent are visible to that agent’s provider.
+
+## Racket data and approvals
+
+Each profile stores Racket documents and latest results encrypted under its private state directory. Approval records include proposed code and remain private to the profile; do not include them in public diagnostics. Read tools expose this user's assignment text, code, and results to any active agent token for that user. Tokens are not restricted to individual courses or workspaces.
+
+Agent saves and runs require separate approvals bound to the client, exact arguments, and saved revision. Owner browser saves/runs are direct authenticated owner actions. A revision conflict prevents an older editor or agent from replacing a newer document without reading it first.
+
+The runner receives only code and language, with no assignment text or secret environment. Container limits and the restricted evaluator deny ordinary file, network, process, and unsafe FFI access. These restrictions do not prove protection from every runtime vulnerability. Never mount credentials, host directories, or a Docker socket into a runner. A failed runner must not trigger execution inside the MCP process.

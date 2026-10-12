@@ -1,0 +1,11 @@
+[Unit]
+Description=Limit Waterloo MCP host build cache and unused images
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/waterloo-mcp-disk-maintenance
+TimeoutStartSec=15min
+Nice=10
+IOSchedulingClass=idle

@@ -1,0 +1,6 @@
+{
+  "url": "https://alice.school.example.com/mcp",
+  "headers": {
+    "Authorization": "Bearer <load-from-your-agent-secret-store>"
+  }
+}

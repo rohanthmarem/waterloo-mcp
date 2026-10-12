@@ -1,0 +1,13 @@
+name = "waterloo-outlook-forwarder"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+
+[vars]
+# Your gateway's ingest route.
+INGEST_URL = "https://YOUR-VM.exe.xyz/ingest/mail"
+# The random address Outlook forwards to. Use at least 20 random characters.
+INGEST_ADDRESS = "u-REPLACE-WITH-RANDOM@example.com"
+# exe.dev mode: X-Exedev-Authorization. Portable hosting: Authorization.
+AUTH_HEADER = "X-Exedev-Authorization"
+
+# INGEST_TOKEN is a secret: wrangler secret put INGEST_TOKEN < token-file

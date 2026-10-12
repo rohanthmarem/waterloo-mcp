@@ -15,3 +15,7 @@ coverage/
 
 # Benchmark run artifacts (real-account timings include course IDs); regenerate with npm run bench
 bench/results/
+
+# Local Python checks
+**/__pycache__/
+*.pyc

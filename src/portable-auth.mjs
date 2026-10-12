@@ -100,7 +100,13 @@ export class PortableAuth {
         (c) =>
           c.enabled && c.expiresAt > Date.now() && equal(digest, c.tokenHash),
       );
-      return client ? { role: "mcp", id: client.id } : null;
+      // A registry entry can never grant owner access.
+      return client
+        ? {
+            role: client.role === "mail-ingest" ? "mail-ingest" : "mcp",
+            id: client.id,
+          }
+        : null;
     }
     const cookie = (req.headers.cookie ?? "")
       .split(";")
