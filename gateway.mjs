@@ -7,6 +7,7 @@ import { CrowdmarkError } from "./src/crowdmark-files.mjs";
 import { batchReadTool, batchReads } from "./src/batch-reads.mjs";
 import { Odyssey } from "./src/odyssey.mjs";
 import { Marmoset, marmosetTools, marmosetSchemas } from "./src/marmoset.mjs";
+import { Quest, questTools, questSchemas } from "./src/quest.mjs";
 import http from "node:http";
 import { ZodError } from "zod";
 import {
@@ -105,6 +106,7 @@ export function createGateway(
     piazzaSession = new PiazzaSession(config),
     marmoset = new Marmoset(config),
     odyssey = new Odyssey(config),
+    quest = new Quest(config),
     crowdmark = new Crowdmark(config),
     mailStore = new MailStore(config),
   } = {},
@@ -590,6 +592,7 @@ export function createGateway(
             ...piazzaTools,
             ...outlookTools,
             ...marmosetTools,
+            ...questTools,
             ...crowdmarkTools,
             ...(racket.enabled() ? racketTools : []),
           ]
@@ -734,25 +737,27 @@ export function createGateway(
                   ? await crowdmark.call(name, args, caller, authorizeCrowdmark)
                   : name === "get_odyssey_schedule"
                     ? await odyssey.call(args)
-                    : Object.hasOwn(marmosetSchemas, name)
-                      ? await marmoset.call(name, args)
-                      : Object.hasOwn(piazzaSchemas, name)
-                        ? await piazza.call(name, args)
-                        : Object.hasOwn(outlookSchemas, name)
-                          ? await outlook.call(name, args)
-                          : roomSchemas[name]
-                            ? await libcal.call(name, args)
-                            : name === "get_course_outline"
-                              ? await getCourseOutline(await client(), args)
-                              : await (
-                                  await client()
-                                ).callTool(
-                                  { name, arguments: args },
-                                  undefined,
-                                  {
-                                    timeout: 180000,
-                                  },
-                                ),
+                    : Object.hasOwn(questSchemas, name)
+                      ? await quest.call(name, args)
+                      : Object.hasOwn(marmosetSchemas, name)
+                        ? await marmoset.call(name, args)
+                        : Object.hasOwn(piazzaSchemas, name)
+                          ? await piazza.call(name, args)
+                          : Object.hasOwn(outlookSchemas, name)
+                            ? await outlook.call(name, args)
+                            : roomSchemas[name]
+                              ? await libcal.call(name, args)
+                              : name === "get_course_outline"
+                                ? await getCourseOutline(await client(), args)
+                                : await (
+                                    await client()
+                                  ).callTool(
+                                    { name, arguments: args },
+                                    undefined,
+                                    {
+                                      timeout: 180000,
+                                    },
+                                  ),
             );
           return expensive.has(name)
             ? await cache.get(JSON.stringify([name, args]), run)
@@ -798,6 +803,7 @@ export function createGateway(
     crowdmark.close?.().catch(() => {});
     marmoset.close?.().catch(() => {});
     odyssey.close?.().catch(() => {});
+    quest.close?.().catch(() => {});
     upstream?.then((c) => c.close()).catch(() => {});
   });
   return app;

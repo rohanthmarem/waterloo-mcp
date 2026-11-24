@@ -146,6 +146,30 @@ export const ERRORS = {
     "Retry later; check Marmoset availability and the browser runtime.",
     true,
   ],
+  QUEST_TERM_UNAVAILABLE: [
+    404,
+    "Quest does not offer this term for this page.",
+    "Use a term Quest lists for your account, such as 1271 for Winter 2027 or 1269 for Fall 2026.",
+    false,
+  ],
+  QUEST_ACCESS_DENIED: [
+    403,
+    "Quest does not authorize this account to open that page.",
+    "Open Quest directly to check what your account can see. No empty result was inferred.",
+    false,
+  ],
+  QUEST_RESPONSE_CHANGED: [
+    502,
+    "Quest returned an unexpected page.",
+    "Open Quest directly and report the changed page layout. No empty result was inferred.",
+    false,
+  ],
+  QUEST_UNAVAILABLE: [
+    503,
+    "Quest could not be reached or read.",
+    "Retry later; Quest has scheduled maintenance windows. Check the browser runtime.",
+    true,
+  ],
 
   RACKET_STORAGE_UNAVAILABLE: [
     503,
